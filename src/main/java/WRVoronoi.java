@@ -191,7 +191,7 @@ public class WRVoronoi {
 
                 Cell c = cells.get(cPointer);
 
-                if (testDealunayTriangle(a, b, c)) {
+                if (testDelaunayTriangle(a, b, c)) {
                     if (!neighbours.contains(b))
                         neighbours.add(b);
                     if (!neighbours.contains(c))
@@ -202,7 +202,7 @@ public class WRVoronoi {
         return neighbours;
     }
 
-    private boolean testDealunayTriangle(Cell a, Cell b, Cell c) {
+    private boolean testDelaunayTriangle(Cell a, Cell b, Cell c) {
         boolean tri = true;
         Circle circle = new Circle(a.site, b.site, c.site);
 

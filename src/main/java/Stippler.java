@@ -163,7 +163,7 @@ class Stippler {
     }
 
     public void connectReverseCells() {
-
+        // TODO Check co-linearity of the points to see if the cell is between two black cells, change accordingly
         for (Cell cell : stippleCells) {
             if(cell.reverse == 1)
                 continue;

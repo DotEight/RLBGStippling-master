@@ -125,7 +125,7 @@ class Painter {
             painting.ellipse(p.x, p.y, d, d);
         }
     }
-
+    // TODO method to do erosion on the background
     void erodeBackground() {
         background.loadPixels();
 
@@ -158,4 +158,6 @@ class Painter {
         background.updatePixels();
 
     }
+    // TODO method to check boundaries and handle black cells near edges, contours etc.
+
 }
