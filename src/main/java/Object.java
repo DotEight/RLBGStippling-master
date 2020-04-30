@@ -91,7 +91,7 @@ class Cell {
     float avgDensity = 0;
     float orientation = 0;
     float eccentricity = 0;
-    float std = 0;
+    float cv = 0;
 
     float[] moments = new float[6];
 
@@ -132,7 +132,7 @@ class Cell {
 
         // Calculate higher order properties
         // Standart deviation
-        std = (float) Math.sqrt(sigmaDiff / area);
+        cv =  (float) Math.sqrt(sigmaDiff / area) / avgDensity;
 
         // Moments are placed in the array from 0 to 5 with the order: m00, m10, m01, m11, m20, m02
         float[] m = moments;

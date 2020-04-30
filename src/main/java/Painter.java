@@ -113,7 +113,8 @@ class Painter {
         for (Cell stippleCell : rlbgs.getStippleCells()) {
             painting.fill(stippleCell.reverse * 255);
             painting.textFont(pa.createFont("Georgia", (float) (rlbgs.options.maxIterations / Math.sqrt((rlbgs.status.iterations + 1)))));
-            painting.text(stippleCell.index, stippleCell.centroid.x, stippleCell.centroid.y);
+            painting.text(stippleCell.index, stippleCell.site.x, stippleCell.site.y);
+            painting.ellipse(stippleCell.site.x, stippleCell.site.y, 5, 5);
         }
     }
 

@@ -18,7 +18,7 @@ public class RLGBStippling extends PApplet {
 
     public void setup() {
         reference.filter(GRAY);
-        rlgbStippler = new Stippler(this, reference, new Options(3, 50, 2, true));
+        rlgbStippler = new Stippler(this, reference, new Options(4, 50, 1, true));
         painter = new Painter(this, rlgbStippler);
         image = painter.paint();
     }
@@ -31,7 +31,7 @@ public class RLGBStippling extends PApplet {
         int index = Tools.colorToInt(rlgbStippler.wrv.diagram.get(mouseX, mouseY));
         Cell cell = rlgbStippler.wrv.cells.get(index);
 
-        println("\n" + cell.eccentricity + " std:" + cell.std);
+        println(cell.area + " avg density:" + cell.avgDensity);
     }
 
     public void keyPressed() {
@@ -46,6 +46,10 @@ public class RLGBStippling extends PApplet {
         }
         if (key == 't') {
             painter.showStippleIndexes = !painter.showStippleIndexes;
+            image = painter.paint();
+        }
+        if (key == 's') {
+            painter.paintAddedSites = !painter.paintAddedSites;
             image = painter.paint();
         }
 

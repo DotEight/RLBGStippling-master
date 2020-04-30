@@ -1,3 +1,4 @@
+import org.paukov.combinatorics3.Generator;
 import processing.core.PApplet;
 import processing.core.PImage;
 
@@ -72,9 +73,6 @@ class Stippler {
     }
 
     public void iterate() {
-        status.splits = 0;
-        status.merges = 0;
-
         wrv.setSites(stippleSites);
         stippleCells = wrv.collectCells();
         stippleSites.clear();
@@ -84,7 +82,6 @@ class Stippler {
         for (Cell cell : stippleCells) {
 
             float sd = getStippleDiameter(cell);
-
             int c = 0;
             if (cell.reverse == 1) {
                 c = 255;
@@ -99,7 +96,7 @@ class Stippler {
                 continue;
             }
 
-            if (cell.moments[0] > splitThresholds[1]) {
+            if (cell.moments[0] > splitThresholds[1] && cell.cv > 0.5) {
                 // Split cell according to cell size and orientation
                 float splitAmount = (float) (0.5f * Math.sqrt(Math.max(1.0f, cell.area) / Math.PI));
                 float angle = cell.orientation;
@@ -144,9 +141,10 @@ class Stippler {
 
     private float getStippleDiameter(Cell cell) {
         if (options.adaptiveStippleSize) {
-
-            float avgIntensitySqrt = (float) Math.sqrt(cell.moments[0] / cell.area);
-
+            // First element in moments array is the sum density that also takes reversed status into account
+            // If the cell is reversed, lighter areas are considered more dense
+            float cellDensity = cell.moments[0];
+            float avgIntensitySqrt = (float) Math.sqrt(cellDensity / cell.area);
             return options.stippleSizeMin * (1.0f - avgIntensitySqrt) + options.stippleSizeMax * avgIntensitySqrt;
         } else {
             return options.initialStippleDiameter;
@@ -163,41 +161,56 @@ class Stippler {
     }
 
     public void connectReverseCells() {
-        // TODO Check co-linearity of the points to see if the cell is between two black cells, change accordingly
+        int k = 5;
         for (Cell cell : stippleCells) {
             if(cell.reverse == 1)
                 continue;
-            List<Cell> neigh = this.wrv.getKNearestNeighbours(cell, 4);
-            Collections.sort(neigh, new Comparator<Cell>() {
+
+            List<Cell> neighbours = this.wrv.getKNearestNeighbours(cell, k);
+            Collections.sort(neighbours, new Comparator<Cell>() {
                         public int compare(Cell c1, Cell c2) {
                             int area1 = (int) c1.area;
                             int area2 = (int) c2.area;
                             return area1 - area2;
                         }
-                    }
-            );
+                    });
 
-            int count = 0;
+            float medianArea = neighbours.get(neighbours.size()/2+1).area;
 
-            for (Cell n : neigh) {
-                //print(n.index + " ");
-                if (n.reverse == 1)
-                    count ++;
+            ArrayList<Cell> reverseNeighbours = new ArrayList<Cell>(k);
+            for (Cell n : neighbours) {
+               if (n.reverse == 1)
+                    reverseNeighbours.add(n);
             }
 
-            float medianArea = neigh.get(neigh.size()/2).area;
-
-            if (count > 2 && cell.area <= medianArea) {
-                flipCell(cell);
-                Stipple s = stipples.get(cell.index);
-                s.c = pa.color(255);
-
+            if (reverseNeighbours.size() > 2 && cell.area <= medianArea) {
+                for (int[] combination: Tools.generateCombinations(reverseNeighbours.size(), 2)) {
+                    Cell c2 = reverseNeighbours.get(combination[0]);
+                    Cell c3 = reverseNeighbours.get(combination[1]);
+                    float l = linearity(cell.site, c2.site, c3.site);
+                    if (l > Math.PI / 2) {
+                        flipCell(cell);
+                        Stipple s = stipples.get(cell.index);
+                        s.c = pa.color(255);
+                        break;
+                    }
+                }
             }
         }
+        System.out.println("Cells connected");
+    }
+
+    public static float linearity(Point p1, Point p2, Point p3) {
+        double angle1 = Math.atan2(p1.y - p2.y,
+                p1.x - p2.x);
+        double angle2 = Math.atan2(p1.y - p3.y,
+                p1.x - p3.x);
+        return (float) Math.abs(angle1 - angle2);
     }
 
     private void flipCell(Cell cell) {
         cell.reverse = 1;
         wrv.calculateCellProperties(cell);
     }
+
 }

@@ -9,7 +9,7 @@ public class Options {
     int superSamplingFactor = 2;
     int maxIterations = 50;
 
-    float initialHysteresis = 0.6f;
+    float initialHysteresis = 1f;
     float hysteresisDelta = 0.01f;
 
     Options (int initialStipples, int maxIterations, int superSamplingFactor, boolean adaptiveStippleSize) {

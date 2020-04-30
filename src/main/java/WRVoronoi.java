@@ -107,7 +107,8 @@ public class WRVoronoi {
             if (c.sumDensity / c.area > this.th) {
                 c.reverse = 1;
             }
-            calculateCellProperties(c);
+            c.calculateProperties(densityMatrix);
+            //calculateCellProperties(c);
         }
 
         return cells;
@@ -139,8 +140,8 @@ public class WRVoronoi {
         }
 
         // Calculate higher order properties
-        // Standard deviation
-        c.std = (float) Math.sqrt(sigmaDiff / c.area);
+        // Coefficient of variation
+        c.cv = (float) Math.sqrt(sigmaDiff / c.area) / avgDensity;
 
         // Moments are placed in the array from 0 to 5 with the order: m00, m10, m01, m11, m20, m02
         float[] m = c.moments;
@@ -174,7 +175,6 @@ public class WRVoronoi {
 
     ArrayList<Cell> getNeighbourCells(Cell a) {
 
-        //TODO implement with arrays only
         ArrayList<Cell> otherCells = new ArrayList<Cell>(cells);
         ArrayList<Cell> neighbours = new ArrayList<Cell>();
 
