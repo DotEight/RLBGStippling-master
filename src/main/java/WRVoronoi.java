@@ -13,8 +13,8 @@ public class WRVoronoi {
     ArrayList<Point> sites;
     ArrayList<Cell> cells;
     float[][] densityMatrix;
-    private int w;
-    private int h;
+    private final int w;
+    private final int h;
     float th;
 
     PApplet pa;
@@ -28,7 +28,7 @@ public class WRVoronoi {
         this.h = densityMatrix[0].length;
         this.th = th;
 
-        this.cells = new ArrayList<Cell>(sites.size());
+        this.cells = new ArrayList<>(sites.size());
         this.diagram = createDiagram();
     }
 
@@ -51,7 +51,7 @@ public class WRVoronoi {
         dg.noStroke();
         for (int i = 0; i < sites.size(); i++) {
             Point site = sites.get(i);
-            int color = Tools.intToColor(i);
+            int color = indexToColor(i);
             dg.fill(color);
             dg.pushMatrix();
             dg.translate(site.x, site.y, 0);
@@ -86,12 +86,8 @@ public class WRVoronoi {
         this.diagram.loadPixels();
         for (int y = 0; y < diagram.height; y++) {
             for (int x = 0; x < diagram.width; x++) {
-                int color = diagram.pixels[x + y * diagram.width];
-                if((x + y * diagram.width)%5000 == 0) {
+                int index = colorToIndex(diagram.pixels[x + y * diagram.width]);
 
-                 //   System.out.println("do stuff");
-                }
-                int index = Tools.colorToInt(diagram.pixels[x + y * diagram.width]);
                 Cell cell = this.cells.get(index);
                 cell.pixelList.add(new Point(x, y));
                 cell.area++;
@@ -163,11 +159,10 @@ public class WRVoronoi {
     }
 
     List<Cell> getKNearestNeighbours(Cell a, int k) {
-        ArrayList<Cell> neighbours = new ArrayList<Cell>(cells);
+        ArrayList<Cell> neighbours = new ArrayList<>(cells);
 
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
-        Collections.sort(neighbours, new DistanceToCellComparator(a));
-
+        neighbours.sort(new DistanceToCellComparator(a));
 
         //final Map<String, Integer> sortedMap = distMap.entrySet().stream().sorted(comparingByValue());
         return neighbours.subList(1, Math.min(k + 1, neighbours.size()));
@@ -175,9 +170,8 @@ public class WRVoronoi {
 
     ArrayList<Cell> getNeighbourCells(Cell a) {
 
-        ArrayList<Cell> otherCells = new ArrayList<Cell>(cells);
-        ArrayList<Cell> neighbours = new ArrayList<Cell>();
-
+        ArrayList<Cell> otherCells = new ArrayList<>(cells);
+        ArrayList<Cell> neighbours = new ArrayList<>();
 
         for (int bPointer = 0; bPointer < otherCells.size() - 1; bPointer++) {
             if (bPointer == a.index)
@@ -218,6 +212,26 @@ public class WRVoronoi {
         }
         return tri;
     }
-    // TODO: full delanuay implementation
+    // TODO: full delaunay implementation
+
+    public Cell getCell(int x, int y) {
+        int index = colorToIndex(diagram.get(x, y));
+        return cells.get(index);
+    }
+
+    public int colorToIndex(int c) {
+        int r = (c>> 16 & 0xFF);
+        int g = (c>> 8 & 0xFF);
+        int b = (c & 0xFF);
+        return r + (g<<8) + (b<<16);
+    }
+
+    public int indexToColor(int i) {
+        int r = i & 0xFF;
+        int g = (i>>8) & 0xFF;
+        int b = (i>>16) & 0xFF;
+        return (r << 16) | (g << 8) | b | 0xFF000000;
+    }
+
 }
 

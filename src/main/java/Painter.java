@@ -1,4 +1,5 @@
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
@@ -13,11 +14,11 @@ class Painter {
     PGraphics painting;
     PImage background;
     boolean paintAddedSites = false;
-    boolean connectCellsEachIteration = false;
     boolean showStippleIndexes = false;
 
 
-    private int w, h;
+    private final int w;
+    private final int h;
 
     Painter(PApplet pa, Stippler rlbgs) {
         this.rlbgs = rlbgs;
@@ -43,16 +44,11 @@ class Painter {
         if (showStippleIndexes)
             showStippleIndexes();
 
-        if (connectCellsEachIteration) {
-        }
-
-
         painting.endDraw();
         return painting;
     }
 
-    void updatePainting() {
-
+    void updateBackground() {
         painting.beginDraw();
         painting.background(background);
         paintStipples();
@@ -63,10 +59,9 @@ class Painter {
         if (showStippleIndexes)
             showStippleIndexes();
 
-        if (connectCellsEachIteration)
-
-            painting.endDraw();
+        painting.endDraw();
     }
+
 
     PImage paintBackground() {
         background.loadPixels();
@@ -86,7 +81,7 @@ class Painter {
             background.pixels[(int) pp.x + (int) pp.y * w] = cc;
         }
         background.updatePixels();
-        updatePainting();
+        updateBackground();
     }
 
     private void paintCells(ArrayList<Cell> cells, int cc) {
@@ -97,7 +92,7 @@ class Painter {
             }
         }
         background.updatePixels();
-        updatePainting();
+        updateBackground();
     }
 
     private void paintStipples() {
@@ -110,9 +105,9 @@ class Painter {
     }
 
     private void showStippleIndexes() {
+        painting.textFont(pa.createFont("Georgia", (float) (rlbgs.options.maxIterations / Math.sqrt((rlbgs.status.iterations + 1)))));
         for (Cell stippleCell : rlbgs.getStippleCells()) {
             painting.fill(stippleCell.reverse * 255);
-            painting.textFont(pa.createFont("Georgia", (float) (rlbgs.options.maxIterations / Math.sqrt((rlbgs.status.iterations + 1)))));
             painting.text(stippleCell.index, stippleCell.site.x, stippleCell.site.y);
             painting.ellipse(stippleCell.site.x, stippleCell.site.y, 5, 5);
         }
@@ -126,39 +121,49 @@ class Painter {
             painting.ellipse(p.x, p.y, d, d);
         }
     }
-    // TODO method to do erosion on the background
-    void erodeBackground() {
-        background.loadPixels();
 
-        //perform erosion
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                if (background.pixels[x + y * w] == pa.color(0)) {
-                    // Using a 3x3 kernel
-                    boolean flag = false;   //this will be set if a pixel of reverse value is found in the mask
-                    for (int ty = y - 1; ty <= y + 1 && flag == false; ty++) {
-                        for (int tx = x - 1; tx <= x + 1 && flag == false; tx++) {
-                            if (ty >= 0 && ty < h && tx >= 0 && tx < w) {
-                                //origin of the mask is on the image pixels
-                                if (background.pixels[x + y * background.width] != pa.color(0)) {
-                                    flag = true;
-                                    background.pixels[x + y * w] = pa.color(255);
-                                }
-                            }
-                        }
-                    }
-                    if (flag == false) {
-                        //all pixels inside the mask [i.e., kernel] were of targetValue
-                        background.pixels[x + y * w] = pa.color(0);
+    // Smooth jagged cell edges by thresholding the image again after blurring.
+    public void smoothBackground() {
+        background.filter(BLUR, 2);
+        background.filter(THRESHOLD, Tools.computeOtsuThreshold(background));
+        updateBackground();
+    }
+
+    //  Method to perform erosion on the background. Foreground pixels are black in this instance.
+    public void erodeBackground() {
+        background.loadPixels();
+        int diameter = 2;
+        int radius = diameter / 2;
+
+        PImage output = pa.createImage(w, h, RGB);
+
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (x >= radius && x < w - radius && y >= radius && y < h - radius) {
+                    if (fitKernel(x, y, radius)) {
+                        output.set(x, y, Color.BLACK);
+                    } else {
+                        output.set(x, y, Color.WHITE);
                     }
                 } else {
-                    background.pixels[x + y * w] = pa.color(255);
+                    output.set(x, y, Color.WHITE);
                 }
             }
         }
-        background.updatePixels();
-
+        background = output;
+        updateBackground();
     }
+
+    private boolean fitKernel(int x, int y, int radius) {
+        for (int i = -radius; i < radius; i++) {
+            for (int j = -radius; j < radius; j++) {
+                if (background.get(x + i, y + j) == Color.WHITE)
+                    return false;
+            }
+        }
+        return true;
+    }
+
     // TODO method to check boundaries and handle black cells near edges, contours etc.
 
 }

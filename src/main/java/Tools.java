@@ -1,14 +1,10 @@
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PImage;
-import processing.javafx.PGraphicsFX2D;
-
-import static processing.core.PConstants.*;
 
 public final class Tools {
 
@@ -37,17 +33,13 @@ public final class Tools {
         return img.pixels[x + img.width * y];
     }
 
-    public static int[] getColors(PImage img, int x, int y) {
-        return getRGB(get(img, x, y));
-    }
-
     public static PImage createImage(int w, int h, int format) {
         return new PImage(w, h, format);
     }
 
     public static List<Integer> getNeighbors(PImage image, int x, int y) {
 
-        List<Integer> neighbors = new ArrayList<Integer>();
+        List<Integer> neighbors = new ArrayList<>();
 
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
@@ -63,80 +55,16 @@ public final class Tools {
         return image;
     }
 
-    public static int getRGB(int[] rgb) {
-        return getRGB(rgb[0], rgb[1], rgb[2]);
-    }
-
     public static PImage createBlankImageLike(PImage image) {
         return createImage(image.width, image.height, image.format, image);
     }
 
-    /**
-     * Returns an array for red, green, blue
-     * */
-    public static int[] getRGB(int rgb) {
-        int r = (rgb >> 16) & 0xff;
-        int g = (rgb >> 8) & 0xff;
-        int b = (rgb & 0xff);
-        return new int[]{r, g, b};
+    public static boolean between(int x, int start, int end) {
+        return between((float) x, start, end);
     }
 
-    public static int getRGB(int red, int green, int blue) {
-        return (red << 16) | (green << 8) | (blue) | 0xFF000000;
-    }
-
-    public static boolean in(int x, int start, int end) {
-        return in((float) x, start, end);
-    }
-
-    public static boolean in(float x, float start, float end) {
+    public static boolean between(float x, float start, float end) {
         return x >= start && x <= end;
-    }
-
-    public static void copyChannel(PImage source, PImage target, int sourceX, int sourceY, int w, int h, int targetX, int targetY, int sourceChannel, int destChannel) {
-
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-
-                int[] rgb = Tools.getColors(source, x, y);
-                int channel = 0;
-
-                switch (sourceChannel) {
-                    case 1:
-                        channel = rgb[0];
-                        break;
-                    case 2:
-                        channel = rgb[1];
-                        break;
-                    case 3:
-                        channel = rgb[2];
-                        break;
-                }
-
-                int[] rgbT = Tools.getColors(target, x, y);
-
-                switch (destChannel) {
-                    case 1:
-                        rgbT[0] = channel;
-                        break;
-                    case 2:
-                        rgbT[1] = channel;
-                        break;
-                    case 3:
-                        rgbT[2] = channel;
-                        break;
-                }
-
-                target.set(x, y, getRGB(rgbT[0], rgbT[1], rgbT[2]));
-            }
-        }
-    }
-
-    public static int getGrey(int color) {
-        int r = (color & 0x00FF0000) >> 16;
-        int g = (color & 0x0000FF00) >> 8;
-        int b = (color & 0x000000FF);
-        return (r + b + g) / 3;
     }
 
     public static PImage copyImage(PImage image) {
@@ -145,20 +73,6 @@ public final class Tools {
         output.image(image, 0, 0);
         output.endDraw();
         return output;
-    }
-
-    public static int colorToInt(int c) {
-        int r = (c>> 16 & 0xFF);
-        int g = (c>> 8 & 0xFF);
-        int b = (c & 0xFF);
-        return r + (g<<8) + (b<<16);
-    }
-
-    public static int intToColor(int i) {
-        int r = i & 0xFF;
-        int g = (i>>8) & 0xFF;
-        int b = (i>>16) & 0xFF;
-        return (r << 16) | (g << 8) | b | 0xFF000000;
     }
 
     public static Point addJitter(Point point, float range) {
@@ -175,7 +89,7 @@ public final class Tools {
             rg = new Random();
         }
 
-        float value = 0;
+        float value;
         do {
             value = rg.nextFloat() * high;
         } while (value == high);
@@ -202,7 +116,7 @@ public final class Tools {
         a.loadPixels();
         for (int y = 0; y < a.height; y++)
             for (int x = 0; x < a.width; x++)
-                m[x][y] = (float) (1 - getGrey(a.pixels[x+y*a.width])/255.0);
+                m[x][y] = (float) (1 - Color.getGrey(a.pixels[x+y*a.width]) / 255.0);
 
         return m;
     }
@@ -213,7 +127,7 @@ public final class Tools {
         return combinations;
     }
 
-    private static void helper(List<int[]> combinations, int data[], int start, int end, int index) {
+    private static void helper(List<int[]> combinations, int[] data, int start, int end, int index) {
         if (index == data.length) {
             int[] combination = data.clone();
             combinations.add(combination);
@@ -227,7 +141,6 @@ public final class Tools {
     }
 
 // OTSU THRESHOLD ####################################################################################################
-
     public static float computeOtsuThreshold(PImage pim)
     {
         int[] histData = new int[256];
@@ -292,4 +205,40 @@ public final class Tools {
         return threshold/256.0f;
     }
 
+    public static PImage erodeImage(PImage input) {
+        input.loadPixels();
+
+        int diameter = 3;
+        int radius = diameter / 2;
+
+        int width = input.width;
+        int height = input.height;
+        PImage output = Tools.createImage(width, height, PConstants.RGB, input);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (x >= radius && x < width-radius && y >= radius && y < height - radius) {
+                    if (fitKernel(input, x, y, radius)) {
+                        output.set(x, y,  Color.BLACK);
+                    } else {
+                        output.set(x, y, Color.WHITE);
+                    }
+                } else {
+                    output.set(x, y, Color.WHITE);
+                }
+            }
+        }
+
+        return output;
+    }
+
+    private static boolean fitKernel(PImage input, int x, int y, int radius) {
+        for (int i = -radius; i < radius; i++) {
+            for (int j = -radius; j < radius; j++) {
+                if (input.get(x + i, y + j) == Color.WHITE)
+                    return false;
+            }
+        }
+        return true;
+    }
 }

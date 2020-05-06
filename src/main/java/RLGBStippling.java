@@ -24,13 +24,11 @@ public class RLGBStippling extends PApplet {
     }
 
     public void draw() {
-        image(painter.getPainting(), 0, 0);
+        image(image, 0, 0);
     }
 
     public void mousePressed() {
-        int index = Tools.colorToInt(rlgbStippler.wrv.diagram.get(mouseX, mouseY));
-        Cell cell = rlgbStippler.wrv.cells.get(index);
-
+        Cell cell = rlgbStippler.wrv.getCell(mouseX, mouseY);
         println(cell.area + " avg density:" + cell.avgDensity);
     }
 
@@ -53,14 +51,14 @@ public class RLGBStippling extends PApplet {
             image = painter.paint();
         }
 
-        if (key == 'e') {
-            painter.erodeBackground();
-            painter.updatePainting();
-        }
-
         if (key == 'r') {
             rlgbStippler.restart(new Options(3, 50, 2, true));
             image = painter.paint();
+        }
+
+        if (key == 'e') {
+            painter.smoothBackground();
+            image = painter.getPainting();
         }
     }
 

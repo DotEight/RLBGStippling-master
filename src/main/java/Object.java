@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 
+import static java.lang.Math.*;
+
 // POINT CLASS ###################################################################################################
 class Point {
     float x, y;
@@ -18,7 +20,7 @@ class Point {
     }
 
     double distanceTo(Point p) {
-        return Math.sqrt(Tools.sq(this.x - p.x) + Tools.sq(this.y - p.y));
+        return sqrt(Tools.sq(this.x - p.x) + Tools.sq(this.y - p.y));
     }
 }
 
@@ -55,7 +57,7 @@ class Circle {
         c23 = (p2.y * p2.y - p3.y * p3.y) + (p2.x * p2.x - p3.x * p3.x);
 
         double smallNumber = 0.01;
-        if ((Math.abs(a13) < smallNumber && Math.abs(b13) < smallNumber) || (Math.abs(a23) < smallNumber && Math.abs(b23) < smallNumber)) {
+        if ((abs(a13) < smallNumber && abs(b13) < smallNumber) || (abs(a23) < smallNumber && abs(b23) < smallNumber)) {
             // points too close so set to default circle
             x = 0;
             y = 0;
@@ -64,13 +66,13 @@ class Circle {
             // y calculation
             y = (a13 * c23 - a23 * c13) / (a13 * b23 - a23 * b13);
             // x calculation
-            if (Math.abs(a13) > Math.abs(a23)) {
+            if (abs(a13) > abs(a23)) {
                 x = (c13 - b13 * y) / a13;
             } else {
                 x = (c23 - b23 * y) / a23;
             }
             // radius calculation
-            rad = Math.sqrt((x - p1.x) * (x - p1.x) + (y - p1.y) * (y - p1.y));
+            rad = sqrt((x - p1.x) * (x - p1.x) + (y - p1.y) * (y - p1.y));
         }
         this.center= new Point((float)x, (float)y);
         this.radius = (float)rad;
@@ -97,7 +99,7 @@ class Cell {
 
     Point site = new Point(0, 0);
     Point centroid = new Point(0, 0);
-    ArrayList<Point> pixelList = new ArrayList<Point>();
+    ArrayList<Point> pixelList = new ArrayList<>();
 
     Cell(int index) {
         this.index = index;
@@ -112,13 +114,13 @@ class Cell {
         avgDensity = sumDensity / area;
 
         float sigmaDiff = 0;
-        moments[0] = Math.abs(reverse * area - sumDensity);
+        moments[0] = abs(reverse * area - sumDensity);
 
         for (Point p : pixelList) {
             // Cast point to pixel location
             int x = (int) p.x;
             int y = (int) p.y;
-            float densityValue = Math.abs(reverse - densityMatrix[x][y]);
+            float densityValue = abs(reverse - densityMatrix[x][y]);
 
             moments[1] += x * densityValue;
             moments[2] += y * densityValue;
@@ -132,7 +134,7 @@ class Cell {
 
         // Calculate higher order properties
         // Standart deviation
-        cv =  (float) Math.sqrt(sigmaDiff / area) / avgDensity;
+        cv =  (float) sqrt(sigmaDiff / area) / avgDensity;
 
         // Moments are placed in the array from 0 to 5 with the order: m00, m10, m01, m11, m20, m02
         float[] m = moments;
@@ -147,7 +149,7 @@ class Cell {
         float z = m[5] / m[0] - centroid.y * centroid.y;
 
         // Orientation
-        orientation = (float) (0.5 * Math.atan(2 * y / (x - z)));
+        orientation = (float) (0.5 * atan(2 * y / (x - z)));
 
         // Eccentricity
         eccentricity = (float) (((Tools.sq(x - z)) + (4 * Tools.sq(y))) / Tools.sq(x + z));

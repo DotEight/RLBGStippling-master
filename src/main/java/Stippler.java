@@ -4,6 +4,8 @@ import processing.core.PImage;
 
 import java.util.*;
 
+import static java.lang.Math.*;
+
 // STIPPLER CLASS #################################################################################################
 class Stippler {
 
@@ -38,8 +40,8 @@ class Stippler {
     }
 
     void initStipples() {
-        this.stippleSites = new ArrayList<Point>(options.initialStipples);
-        this.stipples = new ArrayList<Stipple>(options.initialStipples);
+        this.stippleSites = new ArrayList<>(options.initialStipples);
+        this.stipples = new ArrayList<>(options.initialStipples);
 
         int i = 0;
         do {
@@ -98,10 +100,10 @@ class Stippler {
 
             if (cell.moments[0] > splitThresholds[1] && cell.cv > 0.5) {
                 // Split cell according to cell size and orientation
-                float splitAmount = (float) (0.5f * Math.sqrt(Math.max(1.0f, cell.area) / Math.PI));
+                float splitAmount = (float) (0.5f * sqrt(max(1.0f, cell.area) / PI));
                 float angle = cell.orientation;
-                float splitX = (float) (splitAmount * Math.cos(angle));
-                float splitY = (float) (splitAmount * Math.sin(angle));
+                float splitX = (float) (splitAmount * cos(angle));
+                float splitY = (float) (splitAmount * sin(angle));
 
                 Point splitSeed1 = new Point(cell.centroid.x - splitX, cell.centroid.y - splitY);
                 Point splitSeed2 = new Point(cell.centroid.x + splitX, cell.centroid.y + splitY);
@@ -144,7 +146,7 @@ class Stippler {
             // First element in moments array is the sum density that also takes reversed status into account
             // If the cell is reversed, lighter areas are considered more dense
             float cellDensity = cell.moments[0];
-            float avgIntensitySqrt = (float) Math.sqrt(cellDensity / cell.area);
+            float avgIntensitySqrt = (float) sqrt(cellDensity / cell.area);
             return options.stippleSizeMin * (1.0f - avgIntensitySqrt) + options.stippleSizeMax * avgIntensitySqrt;
         } else {
             return options.initialStippleDiameter;
@@ -152,14 +154,15 @@ class Stippler {
     }
 
     private float[] getSplitThresholds(Cell cell, float stippleDiameter, float hysteresis) {
-        float stippleArea = (float) (Math.PI * Math.pow(stippleDiameter / 2.0f, 2));
-        float lowerValue = (float) ((1.0f - hysteresis / 2.0f) * stippleArea * Math.pow(options.superSamplingFactor, 2));
+        float stippleArea = (float) (PI * pow(stippleDiameter / 2.0f, 2));
+        float lowerValue = (float) ((1.0f - hysteresis / 2.0f) * stippleArea * pow(options.superSamplingFactor, 2));
 
-        float upperValue = (float) ((1.0f + hysteresis / 2.0f) * stippleArea * Math.pow(options.superSamplingFactor, 2));
+        float upperValue = (float) ((1.0f + hysteresis / 2.0f) * stippleArea * pow(options.superSamplingFactor, 2));
         //upperValue = upperValue + upperValue * cell.stdev;
         return new float[]{lowerValue, upperValue};
     }
 
+    // TODO fix this method
     public void connectReverseCells() {
         int k = 5;
         for (Cell cell : stippleCells) {
@@ -167,17 +170,15 @@ class Stippler {
                 continue;
 
             List<Cell> neighbours = this.wrv.getKNearestNeighbours(cell, k);
-            Collections.sort(neighbours, new Comparator<Cell>() {
-                        public int compare(Cell c1, Cell c2) {
-                            int area1 = (int) c1.area;
-                            int area2 = (int) c2.area;
-                            return area1 - area2;
-                        }
-                    });
+            neighbours.sort((c1, c2) -> {
+                int area1 = (int) c1.area;
+                int area2 = (int) c2.area;
+                return area1 - area2;
+            });
 
-            float medianArea = neighbours.get(neighbours.size()/2+1).area;
+            float medianArea = neighbours.get((neighbours.size() / 2) + 1).area;
 
-            ArrayList<Cell> reverseNeighbours = new ArrayList<Cell>(k);
+            ArrayList<Cell> reverseNeighbours = new ArrayList<>(k);
             for (Cell n : neighbours) {
                if (n.reverse == 1)
                     reverseNeighbours.add(n);
@@ -188,10 +189,10 @@ class Stippler {
                     Cell c2 = reverseNeighbours.get(combination[0]);
                     Cell c3 = reverseNeighbours.get(combination[1]);
                     float l = linearity(cell.site, c2.site, c3.site);
-                    if (l > Math.PI / 2) {
+                    if (l > PI / 2) {
                         flipCell(cell);
                         Stipple s = stipples.get(cell.index);
-                        s.c = pa.color(255);
+                        s.c = Color.WHITE;
                         break;
                     }
                 }
@@ -201,11 +202,11 @@ class Stippler {
     }
 
     public static float linearity(Point p1, Point p2, Point p3) {
-        double angle1 = Math.atan2(p1.y - p2.y,
+        double angle1 = atan2(p1.y - p2.y,
                 p1.x - p2.x);
-        double angle2 = Math.atan2(p1.y - p3.y,
+        double angle2 = atan2(p1.y - p3.y,
                 p1.x - p3.x);
-        return (float) Math.abs(angle1 - angle2);
+        return (float) abs(angle1 - angle2);
     }
 
     private void flipCell(Cell cell) {
