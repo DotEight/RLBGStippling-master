@@ -12,7 +12,7 @@ public class RLGBStippling extends PApplet {
     PImage reference, bg, image;
 
     public void settings() {
-        reference = loadImage("input2.jpg"); // Load the image into the program
+        reference = loadImage("input1.jpg"); // Load the image into the program
         size(reference.width, reference.height, P3D);
     }
 

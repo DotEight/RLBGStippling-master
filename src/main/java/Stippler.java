@@ -129,7 +129,7 @@ class Stippler {
         this.status.iterations++;
         this.status.size = stipples.size();
         System.out.println(wrv.cells.size() + ", " + stipples.size());
-        System.out.println("Iteration complete");
+        System.out.println("Iteration " + status.iterations + "complete");
     }
 
     public float computeCurrentHysteresis() {
@@ -163,6 +163,7 @@ class Stippler {
 
     // TODO fix this method
     public void connectReverseCells() {
+        System.out.println("Attempting to connect reverse cells");
         for (Cell cell : stippleCells) {
             boolean shouldReverse = testReversibility(cell);
 
