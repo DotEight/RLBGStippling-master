@@ -126,13 +126,13 @@ class Painter {
     public void smoothBackground() {
         background.filter(BLUR, 2);
         background.filter(THRESHOLD, Tools.computeOtsuThreshold(background));
+        erodeBackground(2);
         updateBackground();
     }
 
     //  Method to perform erosion on the background. Foreground pixels are black in this instance.
-    public void erodeBackground() {
+    public void erodeBackground(int diameter) {
         background.loadPixels();
-        int diameter = 2;
         int radius = diameter / 2;
 
         PImage output = pa.createImage(w, h, RGB);

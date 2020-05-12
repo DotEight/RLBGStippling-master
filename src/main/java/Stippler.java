@@ -1,4 +1,3 @@
-import org.paukov.combinatorics3.Generator;
 import processing.core.PApplet;
 import processing.core.PImage;
 
@@ -48,7 +47,7 @@ class Stippler {
             Point candidatePoint = new Point(Tools.random(densityMatrix.length), Tools.random(densityMatrix[0].length));
 
             boolean pointAccepted = false;
-            if (densityMatrix[(int)candidatePoint.x][(int)candidatePoint.y] > 0.5f)
+            if (densityMatrix[(int) candidatePoint.x][(int) candidatePoint.y] > 0.5f)
                 pointAccepted = true;
 
             if (pointAccepted) {
@@ -56,7 +55,7 @@ class Stippler {
                 stipples.add(new Stipple(candidatePoint, pa.color(0), options.initialStippleDiameter));
                 i++;
             }
-        } while (i<this.options.initialStipples);
+        } while (i < this.options.initialStipples);
 
         this.wrv = new WRVoronoi(pa, stippleSites, densityMatrix, Tools.computeOtsuThreshold(img));
         this.stippleCells = wrv.collectCells();
@@ -91,14 +90,15 @@ class Stippler {
             stipples.add(new Stipple(cell.centroid, pa.color(c), sd));
 
             float[] splitThresholds = getSplitThresholds(cell, sd, this.status.hysteresis);
+            float cellDensity = cell.moments[0];
 
-            if (cell.moments[0] < splitThresholds[0] || cell.area == 0) {
+            if (cellDensity < splitThresholds[0] || cell.area == 0) {
                 // Merge cell (dont do anything)
                 this.status.merges++;
                 continue;
             }
 
-            if (cell.moments[0] > splitThresholds[1] && cell.cv > 0.5) {
+            if (cellDensity > splitThresholds[1] && cell.cv > 0.1) {
                 // Split cell according to cell size and orientation
                 float splitAmount = (float) (0.5f * sqrt(max(1.0f, cell.area) / PI));
                 float angle = cell.orientation;
@@ -107,7 +107,6 @@ class Stippler {
 
                 Point splitSeed1 = new Point(cell.centroid.x - splitX, cell.centroid.y - splitY);
                 Point splitSeed2 = new Point(cell.centroid.x + splitX, cell.centroid.y + splitY);
-                int col = pa.color(Tools.random(255), Tools.random(255)/2, Tools.random(255)/4);
                 stippleSites.add(Tools.addJitter(splitSeed1, 0.001f));
                 //stipples.add(new Stipple(addJitter(splitSeed1, 0.001), col, sd));
                 stippleSites.add(Tools.addJitter(splitSeed2, 0.001f));
@@ -164,44 +163,57 @@ class Stippler {
 
     // TODO fix this method
     public void connectReverseCells() {
-        int k = 5;
         for (Cell cell : stippleCells) {
-            if(cell.reverse == 1)
-                continue;
+            boolean shouldReverse = testReversibility(cell);
 
-            List<Cell> neighbours = this.wrv.getKNearestNeighbours(cell, k);
-            neighbours.sort((c1, c2) -> {
-                int area1 = (int) c1.area;
-                int area2 = (int) c2.area;
-                return area1 - area2;
-            });
-
-            float medianArea = neighbours.get((neighbours.size() / 2) + 1).area;
-
-            ArrayList<Cell> reverseNeighbours = new ArrayList<>(k);
-            for (Cell n : neighbours) {
-               if (n.reverse == 1)
-                    reverseNeighbours.add(n);
-            }
-
-            if (reverseNeighbours.size() > 2 && cell.area <= medianArea) {
-                for (int[] combination: Tools.generateCombinations(reverseNeighbours.size(), 2)) {
-                    Cell c2 = reverseNeighbours.get(combination[0]);
-                    Cell c3 = reverseNeighbours.get(combination[1]);
-                    float l = linearity(cell.site, c2.site, c3.site);
-                    if (l > PI / 2) {
-                        flipCell(cell);
-                        Stipple s = stipples.get(cell.index);
-                        s.c = Color.WHITE;
-                        break;
-                    }
-                }
+            if(shouldReverse) {
+                flipCell(cell);
+                Stipple s = stipples.get(cell.index);
+                s.location = cell.centroid;
+                s.c = Color.WHITE;
             }
         }
         System.out.println("Cells connected");
     }
 
-    public static float linearity(Point p1, Point p2, Point p3) {
+    public boolean testReversibility(Cell cell) {
+        if (cell.reverse == 1 || cell.eccentricity >= 1.0f)
+            return false;
+
+        List<Cell> neighbours = this.wrv.getKNearestNeighbours(cell, 5);
+
+        double[] areaThresholds = areaThresholds(neighbours);
+        //double areaAvg = areaAverage(neighbours);
+
+        ArrayList<Cell> reverseNeighbours = new ArrayList<>(neighbours.size());
+        for (Cell n : neighbours) {
+            if (n.reverse == 1)
+                reverseNeighbours.add(n);
+        }
+
+        if (reverseNeighbours.size() > 2 && cell.area > areaThresholds[0] && cell.area < areaThresholds[1]) {
+
+            for (int[] combination : Tools.generateCombinations(reverseNeighbours.size(), 2)) {
+                Cell c2 = reverseNeighbours.get(combination[0]);
+                Cell c3 = reverseNeighbours.get(combination[1]);
+                float l = linearity(cell.site, c2.site, c3.site);
+                if (l > PI / 2) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private double areaAverage(List<Cell> neighbours) {
+        double sum = 0;
+        for (Cell c : neighbours) {
+            sum += c.area;
+        }
+        return sum / neighbours.size();
+    }
+
+    private float linearity(Point p1, Point p2, Point p3) {
         double angle1 = atan2(p1.y - p2.y,
                 p1.x - p2.x);
         double angle2 = atan2(p1.y - p3.y,
@@ -209,9 +221,23 @@ class Stippler {
         return (float) abs(angle1 - angle2);
     }
 
-    private void flipCell(Cell cell) {
+    public void flipCell(Cell cell) {
         cell.reverse = 1;
         wrv.calculateCellProperties(cell);
     }
 
+    private double[] areaThresholds(List<Cell> cells) {
+/*        cells.sort((c1, c2) -> {
+            int area1 = (int) c1.area;
+            int area2 = (int) c2.area;
+            return area1 - area2;
+        });*/
+        double[] areaValues = new double[cells.size()];
+
+        for (int i = 0; i < areaValues.length; i++) {
+            areaValues[i] = cells.get(i).area;
+        }
+
+        return Tools.outlierThresholds(areaValues);
+    }
 }

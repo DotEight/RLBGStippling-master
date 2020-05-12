@@ -42,7 +42,7 @@ public class WRVoronoi {
 
         PGraphics dg = pa.createGraphics(w, h, P3D);
         float r = dist(0, 0, w, h);
-        float sides = 50;
+        float sides = 64;
         float p = Tools.TWO_PI / sides;
 
         dg.noSmooth();

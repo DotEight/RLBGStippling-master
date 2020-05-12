@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -240,5 +241,32 @@ public final class Tools {
             }
         }
         return true;
+    }
+
+    public static int median(int l, int r)
+    {
+        int n = r - l + 1;
+        n = (n + 1) / 2 - 1;
+        return n + l;
+    }
+
+    public static double[] outlierThresholds(double[] values) {
+        Arrays.sort(values);
+        double q1 = quartile(values,25);
+        double q3 = quartile(values, 75);
+        double iqr = q3 - q1;
+        return new double[]{q1 - 1.5f * iqr, q3 + 1.5f * iqr};
+    }
+
+    private static double quartile(double[] values, double lowerPercent) {
+
+        if (values == null || values.length == 0) {
+            throw new IllegalArgumentException("The data array either is null or does not contain any data.");
+        }
+
+        int n = (int) Math.floor(values.length * lowerPercent / 100);
+
+        return values[n];
+
     }
 }
