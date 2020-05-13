@@ -30,9 +30,9 @@ public class RLGBStippling extends PApplet {
     public void mousePressed() {
         Cell cell = rlgbStippler.wrv.getCell(mouseX, mouseY);
         println("Area: " + cell.area + " avg density:" + cell.avgDensity + "Ecc: " + cell.eccentricity);
-        boolean reversable = rlgbStippler.testReversibility(cell);
-        println(reversable);
-        if (reversable)
+        boolean reversible = rlgbStippler.testReversibility(cell);
+        println(reversible);
+        if (reversible)
             rlgbStippler.flipCell(cell);
 
         painter.paint();
@@ -58,13 +58,17 @@ public class RLGBStippling extends PApplet {
         }
 
         if (key == 'r') {
-            rlgbStippler.restart(new Options(3, 50, 2, true));
+            rlgbStippler.restart(reference, new Options(3, 50, 1, true));
             image = painter.paint();
         }
 
         if (key == 'e') {
             painter.smoothBackground();
             image = painter.getPainting();
+        }
+
+        if (key == 'b') {
+            image = painter.getBackground();
         }
     }
 

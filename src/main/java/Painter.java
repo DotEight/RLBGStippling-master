@@ -1,5 +1,4 @@
 import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
@@ -10,7 +9,7 @@ import java.util.ArrayList;
 
 class Painter {
     PApplet pa;
-    Stippler rlbgs;
+    Stippler stippler;
     PGraphics painting;
     PImage background;
     boolean paintAddedSites = false;
@@ -21,7 +20,7 @@ class Painter {
     private final int h;
 
     Painter(PApplet pa, Stippler rlbgs) {
-        this.rlbgs = rlbgs;
+        this.stippler = rlbgs;
         this.pa = pa;
         w = rlbgs.img.width;
         h = rlbgs.img.height;
@@ -32,6 +31,7 @@ class Painter {
     PImage getPainting() {
         return this.painting;
     }
+    public PImage getBackground() { return this.background; }
 
     PImage paint() {
         painting.beginDraw();
@@ -65,7 +65,7 @@ class Painter {
 
     PImage paintBackground() {
         background.loadPixels();
-        for (Cell stippleCell : rlbgs.getStippleCells()) {
+        for (Cell stippleCell : stippler.getStippleCells()) {
             for (Point pp : stippleCell.pixelList) {
                 background.pixels[(int) pp.x + (int) pp.y * w] = pa.color(255 * (1 - stippleCell.reverse));
             }
@@ -86,7 +86,7 @@ class Painter {
 
     private void paintCells(ArrayList<Cell> cells, int cc) {
         background.loadPixels();
-        for (Cell stippleCell : rlbgs.getStippleCells()) {
+        for (Cell stippleCell : stippler.getStippleCells()) {
             for (Point pp : stippleCell.pixelList) {
                 background.pixels[(int) pp.x + (int) pp.y * w] = cc;
             }
@@ -96,17 +96,18 @@ class Painter {
     }
 
     private void paintStipples() {
-        for (Stipple s : rlbgs.getStipples()) {
+        for (Stipple s : stippler.getStipples()) {
             painting.noStroke();
             painting.fill(s.c);
             float d = s.size;
+            painting.ellipseMode(CENTER);
             painting.ellipse(s.location.x, s.location.y, d, d);
         }
     }
 
     private void showStippleIndexes() {
-        painting.textFont(pa.createFont("Georgia", (float) (rlbgs.options.maxIterations / Math.sqrt((rlbgs.status.iterations + 1)))));
-        for (Cell stippleCell : rlbgs.getStippleCells()) {
+        painting.textFont(pa.createFont("Georgia", (float) (stippler.options.maxIterations / Math.sqrt((stippler.status.iterations + 1)))));
+        for (Cell stippleCell : stippler.getStippleCells()) {
             painting.fill(stippleCell.reverse * 255);
             painting.text(stippleCell.index, stippleCell.site.x, stippleCell.site.y);
             painting.ellipse(stippleCell.site.x, stippleCell.site.y, 5, 5);
@@ -114,19 +115,19 @@ class Painter {
     }
 
     private void paintAddedSites() {
-        for (Point p : rlbgs.getStippleSites()) {
+        for (Point p : stippler.getStippleSites()) {
             painting.noStroke();
             painting.fill(pa.color(0, 0, 255));
-            float d = (float) ((rlbgs.options.stippleSizeMax + rlbgs.options.stippleSizeMin) * 0.5);
+            float d = (float) ((stippler.options.stippleSizeMax + stippler.options.stippleSizeMin) * 0.5);
             painting.ellipse(p.x, p.y, d, d);
         }
     }
 
     // Smooth jagged cell edges by thresholding the image again after blurring.
     public void smoothBackground() {
+        //erodeBackground(2);
         background.filter(BLUR, 2);
-        background.filter(THRESHOLD, Tools.computeOtsuThreshold(background));
-        erodeBackground(2);
+        background.filter(THRESHOLD, 0.5f);
         updateBackground();
     }
 

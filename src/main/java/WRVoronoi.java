@@ -3,6 +3,7 @@ import processing.core.PImage;
 import processing.core.PApplet;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static processing.core.PApplet.dist;
 import static processing.core.PConstants.*;
@@ -162,13 +163,19 @@ public class WRVoronoi {
         ArrayList<Cell> neighbours = new ArrayList<>(cells);
 
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
-        neighbours.sort(new DistanceToCellComparator(a));
+        List<Cell> gridNeighbours = neighbours.stream()
+                .filter(cell -> cell.site.x > a.site.x - diagram.width / 5f
+                                && cell.site.x < a.site.x + diagram.width / 5f
+                                && cell.site.y > a.site.y - diagram.width / 5f
+                                && cell.site.y < a.site.y + diagram.width / 5f)
+                .sorted(new DistanceToCellComparator(a))
+                .collect(Collectors.toList());
 
         //final Map<String, Integer> sortedMap = distMap.entrySet().stream().sorted(comparingByValue());
-        return neighbours.subList(1, Math.min(k + 1, neighbours.size()));
+        return gridNeighbours.subList(1, Math.min(k + 1, neighbours.size()));
     }
 
-    ArrayList<Cell> getNeighbourCells(Cell a) {
+    ArrayList<Cell> getDelaunayNeighbours(Cell a) {
 
         ArrayList<Cell> otherCells = new ArrayList<>(cells);
         ArrayList<Cell> neighbours = new ArrayList<>();

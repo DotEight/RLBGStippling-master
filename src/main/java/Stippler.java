@@ -29,12 +29,13 @@ class Stippler {
         initStipples();
     }
 
-    public void restart(Options options) {
+    public void restart(PImage img, Options options) {
         this.status = new Status();
         this.options = options;
 
         this.stippleSites.clear();
         this.stipples.clear();
+        this.densityMatrix = Tools.createDensityMatrix(img);
         initStipples();
     }
 
@@ -129,7 +130,7 @@ class Stippler {
         this.status.iterations++;
         this.status.size = stipples.size();
         System.out.println(wrv.cells.size() + ", " + stipples.size());
-        System.out.println("Iteration " + status.iterations + "complete");
+        System.out.println("Iteration " + status.iterations + " complete");
     }
 
     public float computeCurrentHysteresis() {
@@ -169,40 +170,44 @@ class Stippler {
 
             if(shouldReverse) {
                 flipCell(cell);
-                Stipple s = stipples.get(cell.index);
-                s.location = cell.centroid;
-                s.c = Color.WHITE;
+                Stipple s = stipples.set(cell.index,
+                        new Stipple(cell.centroid, pa.color(255), getStippleDiameter(cell)));
             }
         }
         System.out.println("Cells connected");
     }
 
     public boolean testReversibility(Cell cell) {
-        if (cell.reverse == 1 || cell.eccentricity >= 1.0f)
+        if (cell.reverse == 1 || cell.eccentricity >= 1.0f) {
+            //System.out.println("FALSE: Cell is reverse OR eccentricity is greater than 1");
             return false;
+        }
 
         List<Cell> neighbours = this.wrv.getKNearestNeighbours(cell, 5);
-
         double[] areaThresholds = areaThresholds(neighbours);
-        //double areaAvg = areaAverage(neighbours);
-
         ArrayList<Cell> reverseNeighbours = new ArrayList<>(neighbours.size());
         for (Cell n : neighbours) {
             if (n.reverse == 1)
                 reverseNeighbours.add(n);
         }
 
-        if (reverseNeighbours.size() > 2 && cell.area > areaThresholds[0] && cell.area < areaThresholds[1]) {
+        if (reverseNeighbours.size() <= 2 || cell.area > areaThresholds[1]) {
+            //System.out.println("FALSE: Not enough reverse neighbours OR cell is outlier OR cell eccentricity greater than 1");
+            return false;
+        }
 
-            for (int[] combination : Tools.generateCombinations(reverseNeighbours.size(), 2)) {
+        for (int[] combination : Tools.generateCombinations(reverseNeighbours.size(), 2)) {
                 Cell c2 = reverseNeighbours.get(combination[0]);
                 Cell c3 = reverseNeighbours.get(combination[1]);
-                float l = linearity(cell.site, c2.site, c3.site);
-                if (l > PI / 2) {
+                float l = linearity(cell.centroid, c2.centroid, c3.centroid);
+                System.out.println("Linearity of " + cell.index + ", " + c2.index + " and " + c3.index + " is " + l );
+                double angle = 3 * PI / 4;
+                if (l >  angle) {
+                    System.out.println("TRUE: Cell is between 2 reverse cells because linearity greater than " + angle);
                     return true;
                 }
             }
-        }
+
         return false;
     }
 
@@ -219,7 +224,9 @@ class Stippler {
                 p1.x - p2.x);
         double angle2 = atan2(p1.y - p3.y,
                 p1.x - p3.x);
-        return (float) abs(angle1 - angle2);
+        double theta = angle1 - angle2;
+        theta = theta - Tools.TWO_PI * Math.floor((theta + Tools.PI) / Tools.TWO_PI);
+        return (float) abs(theta);
     }
 
     public void flipCell(Cell cell) {
