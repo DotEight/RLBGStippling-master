@@ -6,7 +6,7 @@ import java.util.*;
 import static java.lang.Math.*;
 
 // STIPPLER CLASS #################################################################################################
-class Stippler {
+class StippleGenerator {
 
     public Status status;
     public Options options;
@@ -19,7 +19,7 @@ class Stippler {
     private ArrayList<Stipple> stipples;
     public WRVoronoi wrv;
 
-    Stippler(PApplet pa, PImage img, Options options) {
+    StippleGenerator(PApplet pa, PImage img, Options options) {
         this.pa = pa;
         this.status = new Status();
         this.options = options;
@@ -170,8 +170,6 @@ class Stippler {
 
             if(shouldReverse) {
                 flipCell(cell);
-                Stipple s = stipples.set(cell.index,
-                        new Stipple(cell.centroid, pa.color(255), getStippleDiameter(cell)));
             }
         }
         System.out.println("Cells connected");
@@ -232,6 +230,10 @@ class Stippler {
     public void flipCell(Cell cell) {
         cell.reverse = 1;
         wrv.calculateCellProperties(cell);
+
+        Stipple a = stipples.get(cell.index);
+        Stipple s = this.stipples.set(cell.index,
+                new Stipple(cell.centroid, pa.color(255), getStippleDiameter(cell)));
     }
 
     private double[] areaThresholds(List<Cell> cells) {

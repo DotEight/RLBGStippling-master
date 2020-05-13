@@ -1,13 +1,13 @@
 import processing.core.*;
 import java.util.ArrayList;
 
-public class RLGBStippling extends PApplet {
+public class RLBGStippling extends PApplet {
 
 
     // MAIN ########################################################################################################
     int n = 1000;
     ArrayList<Stipple> stipples;
-    Stippler rlgbStippler;
+    StippleGenerator RLBGStippleGenerator;
     Painter painter;
     PImage reference, bg, image;
 
@@ -18,8 +18,8 @@ public class RLGBStippling extends PApplet {
 
     public void setup() {
         reference.filter(GRAY);
-        rlgbStippler = new Stippler(this, reference, new Options(4, 50, 1, true));
-        painter = new Painter(this, rlgbStippler);
+        RLBGStippleGenerator = new StippleGenerator(this, reference, new Options(4, 50, 1, true));
+        painter = new Painter(this, RLBGStippleGenerator);
         image = painter.paint();
     }
 
@@ -28,23 +28,23 @@ public class RLGBStippling extends PApplet {
     }
 
     public void mousePressed() {
-        Cell cell = rlgbStippler.wrv.getCell(mouseX, mouseY);
+        Cell cell = RLBGStippleGenerator.wrv.getCell(mouseX, mouseY);
         println("Area: " + cell.area + " avg density:" + cell.avgDensity + "Ecc: " + cell.eccentricity);
-        boolean reversible = rlgbStippler.testReversibility(cell);
+        boolean reversible = RLBGStippleGenerator.testReversibility(cell);
         println(reversible);
         if (reversible)
-            rlgbStippler.flipCell(cell);
+            RLBGStippleGenerator.flipCell(cell);
 
         painter.paint();
     }
 
     public void keyPressed() {
         if (key == 'i') {
-            rlgbStippler.iterate();
+            RLBGStippleGenerator.iterate();
             image = painter.paint();
         }
         if (key == 'c') {
-            rlgbStippler.connectReverseCells();
+            RLBGStippleGenerator.connectReverseCells();
             image = painter.paint();
 
         }
@@ -58,7 +58,7 @@ public class RLGBStippling extends PApplet {
         }
 
         if (key == 'r') {
-            rlgbStippler.restart(reference, new Options(3, 50, 1, true));
+            RLBGStippleGenerator.restart(reference, new Options(3, 50, 1, true));
             image = painter.paint();
         }
 

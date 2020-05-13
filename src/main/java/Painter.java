@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 class Painter {
     PApplet pa;
-    Stippler stippler;
+    StippleGenerator stippleGenerator;
     PGraphics painting;
     PImage background;
     boolean paintAddedSites = false;
@@ -19,8 +19,8 @@ class Painter {
     private final int w;
     private final int h;
 
-    Painter(PApplet pa, Stippler rlbgs) {
-        this.stippler = rlbgs;
+    Painter(PApplet pa, StippleGenerator rlbgs) {
+        this.stippleGenerator = rlbgs;
         this.pa = pa;
         w = rlbgs.img.width;
         h = rlbgs.img.height;
@@ -65,7 +65,7 @@ class Painter {
 
     PImage paintBackground() {
         background.loadPixels();
-        for (Cell stippleCell : stippler.getStippleCells()) {
+        for (Cell stippleCell : stippleGenerator.getStippleCells()) {
             for (Point pp : stippleCell.pixelList) {
                 background.pixels[(int) pp.x + (int) pp.y * w] = pa.color(255 * (1 - stippleCell.reverse));
             }
@@ -86,7 +86,7 @@ class Painter {
 
     private void paintCells(ArrayList<Cell> cells, int cc) {
         background.loadPixels();
-        for (Cell stippleCell : stippler.getStippleCells()) {
+        for (Cell stippleCell : stippleGenerator.getStippleCells()) {
             for (Point pp : stippleCell.pixelList) {
                 background.pixels[(int) pp.x + (int) pp.y * w] = cc;
             }
@@ -96,7 +96,7 @@ class Painter {
     }
 
     private void paintStipples() {
-        for (Stipple s : stippler.getStipples()) {
+        for (Stipple s : stippleGenerator.getStipples()) {
             painting.noStroke();
             painting.fill(s.c);
             float d = s.size;
@@ -106,8 +106,8 @@ class Painter {
     }
 
     private void showStippleIndexes() {
-        painting.textFont(pa.createFont("Georgia", (float) (stippler.options.maxIterations / Math.sqrt((stippler.status.iterations + 1)))));
-        for (Cell stippleCell : stippler.getStippleCells()) {
+        painting.textFont(pa.createFont("Georgia", (float) (stippleGenerator.options.maxIterations / Math.sqrt((stippleGenerator.status.iterations + 1)))));
+        for (Cell stippleCell : stippleGenerator.getStippleCells()) {
             painting.fill(stippleCell.reverse * 255);
             painting.text(stippleCell.index, stippleCell.site.x, stippleCell.site.y);
             painting.ellipse(stippleCell.site.x, stippleCell.site.y, 5, 5);
@@ -115,10 +115,10 @@ class Painter {
     }
 
     private void paintAddedSites() {
-        for (Point p : stippler.getStippleSites()) {
+        for (Point p : stippleGenerator.getStippleSites()) {
             painting.noStroke();
             painting.fill(pa.color(0, 0, 255));
-            float d = (float) ((stippler.options.stippleSizeMax + stippler.options.stippleSizeMin) * 0.5);
+            float d = (float) ((stippleGenerator.options.stippleSizeMax + stippleGenerator.options.stippleSizeMin) * 0.5);
             painting.ellipse(p.x, p.y, d, d);
         }
     }
