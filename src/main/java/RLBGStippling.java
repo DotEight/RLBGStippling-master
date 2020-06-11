@@ -29,7 +29,7 @@ public class RLBGStippling extends PApplet {
 
     public void mousePressed() {
         Cell cell = RLBGStippleGenerator.wrv.getCell(mouseX, mouseY);
-        println("Area: " + cell.area + " avg density:" + cell.avgDensity + "Ecc: " + cell.eccentricity);
+        println("Area: " + cell.area + " avg density:" + cell.avgDensity + " Ecc: " + cell.eccentricity);
         boolean reversible = RLBGStippleGenerator.testReversibility(cell);
         println(reversible);
         if (reversible)

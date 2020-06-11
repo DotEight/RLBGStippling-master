@@ -189,7 +189,7 @@ class StippleGenerator {
                 reverseNeighbours.add(n);
         }
 
-        if (reverseNeighbours.size() <= 2 || cell.area > areaThresholds[1]) {
+        if (reverseNeighbours.size() <= 2 || cell.area > areaThresholds[1] || cell.eccentricity > 0.8f) {
             //System.out.println("FALSE: Not enough reverse neighbours OR cell is outlier OR cell eccentricity greater than 1");
             return false;
         }

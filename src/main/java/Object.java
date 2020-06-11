@@ -152,7 +152,10 @@ class Cell {
         orientation = (float) (0.5 * atan(2 * y / (x - z)));
 
         // Eccentricity
-        eccentricity = (float) (((Tools.sq(x - z)) + (4 * Tools.sq(y))) / Tools.sq(x + z));
+        double lambda1 = (x + z) / 2 + Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
+        double lambda2 = (x + z) / 2 - Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
+        eccentricity = (float) Math.sqrt((1- lambda2 / lambda1));
+        //eccentricity = (float) (((Tools.sq(x - z)) - (4 * Tools.sq(y))) / Tools.sq(x + z));
     }
 }
 

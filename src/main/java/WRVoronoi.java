@@ -156,7 +156,9 @@ public class WRVoronoi {
         c.orientation = (float) (0.5 * Math.atan(2 * y / (x - z)));
 
         // Eccentricity
-        c.eccentricity = (float) (((Tools.sq(x - z)) + (4 * Tools.sq(y))) / Tools.sq(x + z));
+        double lambda1 = (x + z) / 2 + Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
+        double lambda2 = (x + z) / 2 - Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
+        c.eccentricity = (float) Math.sqrt((1- lambda2 / lambda1));
     }
 
     List<Cell> getKNearestNeighbours(Cell a, int k) {
@@ -172,7 +174,7 @@ public class WRVoronoi {
                 .collect(Collectors.toList());
 
         //final Map<String, Integer> sortedMap = distMap.entrySet().stream().sorted(comparingByValue());
-        return gridNeighbours.subList(1, Math.min(k + 1, neighbours.size()));
+        return gridNeighbours.subList(1, Math.min(k + 1, gridNeighbours.size()));
     }
 
     ArrayList<Cell> getDelaunayNeighbours(Cell a) {
