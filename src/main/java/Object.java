@@ -87,6 +87,7 @@ class Circle {
 class Cell {
     int index;
     int reverse = 0;
+    ArrayList<Point> pixelList = new ArrayList<>();
 
     float area = 0;
     float sumDensity = 0;
@@ -99,7 +100,7 @@ class Cell {
 
     Point site = new Point(0, 0);
     Point centroid = new Point(0, 0);
-    ArrayList<Point> pixelList = new ArrayList<>();
+
 
     Cell(int index) {
         this.index = index;
@@ -109,6 +110,17 @@ class Cell {
         this.index = index;
         this.site = site;
     }
+
+    void resetProperties() {
+        this.orientation = 0;
+        this.eccentricity = 0;
+        this.cv = 0;
+
+        this.moments = new float[6];
+
+        this.site = new Point(0, 0);
+        this.centroid = new Point(0, 0);
+    };
 
     void calculateProperties(float [][] densityMatrix) {
         avgDensity = sumDensity / area;
@@ -156,6 +168,10 @@ class Cell {
         double lambda2 = (x + z) / 2 - Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
         eccentricity = (float) Math.sqrt((1- lambda2 / lambda1));
         //eccentricity = (float) (((Tools.sq(x - z)) - (4 * Tools.sq(y))) / Tools.sq(x + z));
+    }
+
+    public void flip() {
+        this.reverse = 1 - this.reverse;
     }
 }
 

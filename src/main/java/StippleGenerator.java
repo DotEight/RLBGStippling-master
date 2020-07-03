@@ -23,8 +23,9 @@ class StippleGenerator {
         this.pa = pa;
         this.status = new Status();
         this.options = options;
+        int ssf = options.superSamplingFactor;
+        img.resize(img.width * ssf, 0);
         this.img = img;
-
         this.densityMatrix = Tools.createDensityMatrix(img);
         initStipples();
     }
@@ -65,6 +66,9 @@ class StippleGenerator {
     public ArrayList<Stipple> getStipples() {
         return stipples;
     }
+    public Stipple getStipple(int index) {
+        return stipples.get(index);
+    }
 
     public ArrayList<Cell> getStippleCells() {
         return stippleCells;
@@ -75,6 +79,8 @@ class StippleGenerator {
     }
 
     public void iterate() {
+        this.status.splits = 0;
+        this.status.merges = 0;
         wrv.setSites(stippleSites);
         stippleCells = wrv.collectCells();
         stippleSites.clear();
@@ -88,7 +94,7 @@ class StippleGenerator {
             if (cell.reverse == 1) {
                 c = 255;
             }
-            stipples.add(new Stipple(cell.centroid, pa.color(c), sd));
+            stipples.add(cell.index, new Stipple(cell.centroid, pa.color(c), sd));
 
             float[] splitThresholds = getSplitThresholds(cell, sd, this.status.hysteresis);
             float cellDensity = cell.moments[0];
@@ -99,29 +105,10 @@ class StippleGenerator {
                 continue;
             }
 
-            if (cellDensity > splitThresholds[1] && cell.cv > 0.1) {
+            if (cellDensity > splitThresholds[1]) {
+                splitCell(cell);
                 // Split cell according to cell size and orientation
-                float splitAmount = (float) (0.5f * sqrt(max(1.0f, cell.area) / PI));
-                float angle = cell.orientation;
-                float splitX = (float) (splitAmount * cos(angle));
-                float splitY = (float) (splitAmount * sin(angle));
 
-                Point splitSeed1 = new Point(cell.centroid.x - splitX, cell.centroid.y - splitY);
-                Point splitSeed2 = new Point(cell.centroid.x + splitX, cell.centroid.y + splitY);
-                stippleSites.add(Tools.addJitter(splitSeed1, 0.001f));
-                //stipples.add(new Stipple(addJitter(splitSeed1, 0.001), col, sd));
-                stippleSites.add(Tools.addJitter(splitSeed2, 0.001f));
-                //stipples.add(new Stipple(addJitter(splitSeed2, 0.001), col, sd));
-
-
-                // check boundaries
-                //splitSeed1.setX(std::max(0.0f, std::min(splitSeed1.x(), 1.0f)));
-                //splitSeed1.setY(std::max(0.0f, std::min(splitSeed1.y(), 1.0f)));
-
-                //splitSeed2.setX(std::max(0.0f, std::min(splitSeed2.x(), 1.0f)));
-                //splitSeed2.setY(std::max(0.0f, std::min(splitSeed2.y(), 1.0f)));
-
-                this.status.splits++;
                 continue;
             }
 
@@ -129,8 +116,34 @@ class StippleGenerator {
         }
         this.status.iterations++;
         this.status.size = stipples.size();
-        System.out.println(wrv.cells.size() + ", " + stipples.size());
-        System.out.println("Iteration " + status.iterations + " complete");
+    }
+
+    private void splitCell(Cell cell) {
+        if (cell.reverse == 1 && cell.cv <= 0.2) {
+            stippleSites.add(cell.centroid);
+            return;
+        }
+        // Split cell according to cell size and orientation
+        float splitAmount = (float) (0.5f * sqrt(max(1.0f, cell.area) / PI));
+        float angle = cell.orientation;
+        float splitX = (float) (splitAmount * cos(angle));
+        float splitY = (float) (splitAmount * sin(angle));
+
+        Point splitSeed1 = new Point(cell.centroid.x - splitX, cell.centroid.y - splitY);
+        Point splitSeed2 = new Point(cell.centroid.x + splitX, cell.centroid.y + splitY);
+        stippleSites.add(Tools.addJitter(splitSeed1, 0.001f));
+        //stipples.add(new Stipple(addJitter(splitSeed1, 0.001), col, sd));
+        stippleSites.add(Tools.addJitter(splitSeed2, 0.001f));
+        //stipples.add(new Stipple(addJitter(splitSeed2, 0.001), col, sd));
+
+        // check boundaries
+        //splitSeed1.setX(std::max(0.0f, std::min(splitSeed1.x(), 1.0f)));
+        //splitSeed1.setY(std::max(0.0f, std::min(splitSeed1.y(), 1.0f)));
+
+        //splitSeed2.setX(std::max(0.0f, std::min(splitSeed2.x(), 1.0f)));
+        //splitSeed2.setY(std::max(0.0f, std::min(splitSeed2.y(), 1.0f)));
+
+        this.status.splits++;
     }
 
     public float computeCurrentHysteresis() {
@@ -189,7 +202,7 @@ class StippleGenerator {
                 reverseNeighbours.add(n);
         }
 
-        if (reverseNeighbours.size() <= 2 || cell.area > areaThresholds[1] || cell.eccentricity > 0.8f) {
+        if (reverseNeighbours.size() <= 2 || cell.area > areaThresholds[1] || cell.eccentricity > 0.85f) {
             //System.out.println("FALSE: Not enough reverse neighbours OR cell is outlier OR cell eccentricity greater than 1");
             return false;
         }
@@ -229,10 +242,11 @@ class StippleGenerator {
 
     public void flipCell(Cell cell) {
         cell.reverse = 1;
+        cell.resetProperties();
         wrv.calculateCellProperties(cell);
 
         Stipple a = stipples.get(cell.index);
-        Stipple s = this.stipples.set(cell.index,
+        this.stipples.set(cell.index,
                 new Stipple(cell.centroid, pa.color(255), getStippleDiameter(cell)));
     }
 

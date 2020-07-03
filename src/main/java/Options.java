@@ -1,6 +1,6 @@
 public class Options {
     int initialStipples = 1;
-    float initialStippleDiameter = 4.0f;
+    float initialStippleDiameter = 3.0f;
 
     boolean adaptiveStippleSize = false;
     float stippleSizeMin = 2.0f;

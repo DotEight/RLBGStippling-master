@@ -139,6 +139,7 @@ public class WRVoronoi {
         // Calculate higher order properties
         // Coefficient of variation
         c.cv = (float) Math.sqrt(sigmaDiff / c.area) / avgDensity;
+        // c.cv =  (1 + 1 / (4 * c.area)) * c.cv;
 
         // Moments are placed in the array from 0 to 5 with the order: m00, m10, m01, m11, m20, m02
         float[] m = c.moments;
@@ -163,13 +164,13 @@ public class WRVoronoi {
 
     List<Cell> getKNearestNeighbours(Cell a, int k) {
         ArrayList<Cell> neighbours = new ArrayList<>(cells);
-
+        float gridSize = diagram.width;
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
         List<Cell> gridNeighbours = neighbours.stream()
-                .filter(cell -> cell.site.x > a.site.x - diagram.width / 5f
-                                && cell.site.x < a.site.x + diagram.width / 5f
-                                && cell.site.y > a.site.y - diagram.width / 5f
-                                && cell.site.y < a.site.y + diagram.width / 5f)
+                .filter(cell -> cell.site.x > a.site.x - gridSize
+                                && cell.site.x < a.site.x + gridSize
+                                && cell.site.y > a.site.y - gridSize
+                                && cell.site.y < a.site.y + gridSize)
                 .sorted(new DistanceToCellComparator(a))
                 .collect(Collectors.toList());
 
