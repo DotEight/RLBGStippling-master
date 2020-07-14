@@ -1,9 +1,12 @@
+package com.rlgbs;
+
 public class Color {
 
     public static final int BLACK = getRGB(0, 0, 0);
     public static final int WHITE = getRGB(255, 255, 255);
 
-    private Color() {}
+    private Color() {
+    }
 
     public static int[] getRGB(int rgb) {
         int r = (rgb >> 16) & 0xff;

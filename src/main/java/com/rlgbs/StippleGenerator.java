@@ -1,3 +1,5 @@
+package com.rlgbs;
+
 import processing.core.PApplet;
 import processing.core.PImage;
 
@@ -66,6 +68,7 @@ class StippleGenerator {
     public ArrayList<Stipple> getStipples() {
         return stipples;
     }
+
     public Stipple getStipple(int index) {
         return stipples.get(index);
     }
@@ -132,9 +135,9 @@ class StippleGenerator {
         Point splitSeed1 = new Point(cell.centroid.x - splitX, cell.centroid.y - splitY);
         Point splitSeed2 = new Point(cell.centroid.x + splitX, cell.centroid.y + splitY);
         stippleSites.add(Tools.addJitter(splitSeed1, 0.001f));
-        //stipples.add(new Stipple(addJitter(splitSeed1, 0.001), col, sd));
+        //stipples.add(new com.rlgbs.Stipple(addJitter(splitSeed1, 0.001), col, sd));
         stippleSites.add(Tools.addJitter(splitSeed2, 0.001f));
-        //stipples.add(new Stipple(addJitter(splitSeed2, 0.001), col, sd));
+        //stipples.add(new com.rlgbs.Stipple(addJitter(splitSeed2, 0.001), col, sd));
 
         // check boundaries
         //splitSeed1.setX(std::max(0.0f, std::min(splitSeed1.x(), 1.0f)));
@@ -190,7 +193,7 @@ class StippleGenerator {
 
     public boolean testReversibility(Cell cell) {
         if (cell.reverse == 1 || cell.eccentricity >= 1.0f) {
-            //System.out.println("FALSE: Cell is reverse OR eccentricity is greater than 1");
+            //System.out.println("FALSE: com.rlgbs.Cell is reverse OR eccentricity is greater than 1");
             return false;
         }
 
@@ -208,16 +211,16 @@ class StippleGenerator {
         }
 
         for (int[] combination : Tools.generateCombinations(reverseNeighbours.size(), 2)) {
-                Cell c2 = reverseNeighbours.get(combination[0]);
-                Cell c3 = reverseNeighbours.get(combination[1]);
-                float l = linearity(cell.centroid, c2.centroid, c3.centroid);
-                System.out.println("Linearity of " + cell.index + ", " + c2.index + " and " + c3.index + " is " + l );
-                double angle = 3 * PI / 4;
-                if (l >  angle) {
-                    System.out.println("TRUE: Cell is between 2 reverse cells because linearity greater than " + angle);
-                    return true;
-                }
+            Cell c2 = reverseNeighbours.get(combination[0]);
+            Cell c3 = reverseNeighbours.get(combination[1]);
+            float l = linearity(cell.centroid, c2.centroid, c3.centroid);
+            System.out.println("Linearity of " + cell.index + ", " + c2.index + " and " + c3.index + " is " + l);
+            double angle = 3 * PI / 4;
+            if (l > angle) {
+                System.out.println("TRUE: com.rlgbs.Cell is between 2 reverse cells because linearity greater than " + angle);
+                return true;
             }
+        }
 
         return false;
     }

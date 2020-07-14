@@ -1,3 +1,5 @@
+package com.rlgbs;
+
 public class Options {
     int initialStipples = 1;
     float initialStippleDiameter = 3.0f;

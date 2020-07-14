@@ -1,3 +1,5 @@
+package com.rlgbs;
+
 import java.util.ArrayList;
 
 import static java.lang.Math.*;
@@ -120,7 +122,7 @@ class Cell {
 
         this.site = new Point(0, 0);
         this.centroid = new Point(0, 0);
-    };
+    }
 
     void calculateProperties(float [][] densityMatrix) {
         avgDensity = sumDensity / area;
@@ -167,7 +169,7 @@ class Cell {
         double lambda1 = (x + z) / 2 + Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
         double lambda2 = (x + z) / 2 - Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
         eccentricity = (float) Math.sqrt((1- lambda2 / lambda1));
-        //eccentricity = (float) (((Tools.sq(x - z)) - (4 * Tools.sq(y))) / Tools.sq(x + z));
+        //eccentricity = (float) (((com.rlgbs.Tools.sq(x - z)) - (4 * com.rlgbs.Tools.sq(y))) / com.rlgbs.Tools.sq(x + z));
     }
 
     public void flip() {

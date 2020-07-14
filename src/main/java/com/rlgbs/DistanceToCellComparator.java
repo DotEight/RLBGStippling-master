@@ -1,10 +1,11 @@
+package com.rlgbs;
+
 import java.util.Comparator;
 
 public class DistanceToCellComparator implements Comparator<Cell> {
-    private Cell c;
+    private final Cell c;
 
-    public DistanceToCellComparator(Cell c)
-    {
+    public DistanceToCellComparator(Cell c) {
         this.c = c;
     }
 

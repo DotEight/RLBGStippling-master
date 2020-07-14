@@ -1,10 +1,11 @@
+package com.rlgbs;
+
 import processing.core.*;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class RLBGStippling extends PApplet {
-
-
-    // MAIN ########################################################################################################
     int n = 1000;
     ArrayList<Stipple> stipples;
     StippleGenerator rLBGStippleGenerator;
@@ -12,8 +13,8 @@ public class RLBGStippling extends PApplet {
     PImage reference, bg, image;
 
     public void settings() {
-        reference = loadImage("input2.jpg"); // Load the image into the program
-        size(reference.width*2, reference.height*2, P3D);
+        reference = loadImage("input1.jpg"); // Load the image into the program
+        size(reference.width * 2, reference.height * 2, P3D);
     }
 
     public void setup() {
@@ -23,7 +24,9 @@ public class RLBGStippling extends PApplet {
         image = painter.paint();
     }
 
-    public void draw() { image(image,0,0); }
+    public void draw() {
+        image(image, 0, 0);
+    }
 
     public void mousePressed() {
         Cell cell = rLBGStippleGenerator.wrv.getCell(mouseX, mouseY);
@@ -41,9 +44,9 @@ public class RLBGStippling extends PApplet {
 //        float y = cell.moments[3] / cell.moments[0] - cell.centroid.x * cell.centroid.y; // Stopped multiplying this by 2 because no point
 //        float z = cell.moments[5] / cell.moments[0] - cell.centroid.y * cell.centroid.y;
 //        // Eccentricity
-//        double l = (x + z) / 2 + Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
+//        double l = (x + z) / 2 + Math.sqrt(4 * com.rlgbs.Tools.sq(y) + com.rlgbs.Tools.sq(x - z)) / 2;
 //        l = Math.sqrt(8 * l);
-//        double w = (x + z) / 2 - Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
+//        double w = (x + z) / 2 - Math.sqrt(4 * com.rlgbs.Tools.sq(y) + com.rlgbs.Tools.sq(x - z)) / 2;
 //        w = Math.sqrt(8 * w);
 //        painter.painting.beginDraw();
 //        painter.painting.pushMatrix();
@@ -93,32 +96,43 @@ public class RLBGStippling extends PApplet {
         }
 
         if (key == 'a') {
-            PImage thref = reference.copy();
-            thref.filter(BLUR, 2);
-            thref.filter(THRESHOLD, 0.5f);
-
-            println(Tools.computeOtsuThreshold(reference));
-            painter.changeBackground(thref);
+//            PImage thref = reference.copy();
+//            thref.filter(BLUR, 2);
+//            thref.filter(THRESHOLD, 0.5f);
+//            painter.changeBackground(thref);
             painter.erodeBackground(4);
             painter.erodeBackground(4);
 
             image = painter.getStippleImage();
         }
         if (key == 'p') {
-            PImage thref = reference.copy();
-            thref.filter(BLUR, 2);
-            thref.filter(THRESHOLD, Tools.computeOtsuThreshold(reference));
-            thref = Imp.dilate(thref, 2);
-            thref = Imp.erode(thref, 2);
-            thref = Imp.dilate(thref, 2);
-            thref = Imp.erode(thref, 2);
-            painter.changeBackground(thref);
+//            List<List<Point>> polygons = Imp.findContours(painter.getBackgroundImage(), 2);
+//            PGraphics pg = createGraphics(width, height, P2D);
+//
+//            pg.beginDraw();
+//            pg.background(255);
+//            pg.stroke(0,0,0);
+//            pg.strokeWeight(2);
+//            for (List<Point> polygon : polygons) {
+//                int c = color(random(255),random(255),0);
+//                pg.stroke(c);
+//                pg.fill(c);
+//                pg.beginShape();
+//                for (Point p : polygon){
+//                    pg.vertex(p.x, p.y);
+//                }
+//                pg.endShape(CLOSE);
+//            }
+//            pg.endDraw();
+//            painter.changeBackground(pg.get());
+//            image = painter.getStippleImage();
 
-            image = painter.getStippleImage();
+            image = Imp.drawContours(painter.getBackgroundImage());
         }
+
     }
 
     public static void main(String[] args) {
-        PApplet.main("RLBGStippling", args);
+        PApplet.main("com.rlgbs.RLBGStippling", args);
     }
 }

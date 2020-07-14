@@ -1,3 +1,5 @@
+package com.rlgbs;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -124,11 +126,11 @@ public final class Tools {
 
     public static List<int[]> generateCombinations(int n, int r) {
         List<int[]> combinations = new ArrayList<>();
-        helper(combinations, new int[r], 0, n - 1, 0);
+        combinationHelper(combinations, new int[r], 0, n - 1, 0);
         return combinations;
     }
 
-    private static void helper(List<int[]> combinations, int[] data, int start, int end, int index) {
+    private static void combinationHelper(List<int[]> combinations, int[] data, int start, int end, int index) {
         if (index == data.length) {
             int[] combination = data.clone();
             combinations.add(combination);
@@ -136,14 +138,13 @@ public final class Tools {
             int max = Math.min(end, end + 1 - data.length + index);
             for (int i = start; i <= max; i++) {
                 data[index] = i;
-                helper(combinations, data, i + 1, end, index + 1);
+                combinationHelper(combinations, data, i + 1, end, index + 1);
             }
         }
     }
 
-// OTSU THRESHOLD ####################################################################################################
-    public static float computeOtsuThreshold(PImage pim)
-    {
+    // OTSU THRESHOLD ####################################################################################################
+    public static float computeOtsuThreshold(PImage pim) {
         int[] histData = new int[256];
         int maxLevelValue = 0;
         int threshold = 0;
@@ -161,12 +162,11 @@ public final class Tools {
         // Calculate histogram and find the level with the max value
         ptr = 0;
 
-        while (ptr < srcData.length)
-        {
+        while (ptr < srcData.length) {
             int h = srcData[ptr] & 0xFF;
-            histData[h] ++;
+            histData[h]++;
             if (histData[h] > maxLevelValue) maxLevelValue = histData[h];
-            ptr ++;
+            ptr++;
         }
 
         // Total number of pixels
@@ -181,8 +181,7 @@ public final class Tools {
 
         float varMax = 0;
 
-        for (int t=0; t<256; t++)
-        {
+        for (int t = 0; t < 256; t++) {
             wB += histData[t];          // Weight Background
             if (wB == 0) continue;
 
@@ -206,21 +205,19 @@ public final class Tools {
         return threshold/256.0f;
     }
 
-    public static PImage erodeImage(PImage input) {
+    public static PImage erodeImage(PImage input, int diameter) {
         input.loadPixels();
-
-        int diameter = 3;
         int radius = diameter / 2;
 
         int width = input.width;
         int height = input.height;
-        PImage output = Tools.createImage(width, height, PConstants.RGB, input);
+        PImage output = Tools.createImage(width, height, PConstants.RGB);
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if (x >= radius && x < width-radius && y >= radius && y < height - radius) {
+                if (x >= radius && x < width - radius && y >= radius && y < height - radius) {
                     if (fitKernel(input, x, y, radius)) {
-                        output.set(x, y,  Color.BLACK);
+                        output.set(x, y, Color.BLACK);
                     } else {
                         output.set(x, y, Color.WHITE);
                     }
@@ -243,8 +240,7 @@ public final class Tools {
         return true;
     }
 
-    public static int median(int l, int r)
-    {
+    public static int median(int l, int r) {
         int n = r - l + 1;
         n = (n + 1) / 2 - 1;
         return n + l;
@@ -267,6 +263,5 @@ public final class Tools {
         int n = (int) Math.floor(values.length * lowerPercent / 100);
 
         return values[n];
-
     }
 }

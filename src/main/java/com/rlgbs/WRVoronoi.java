@@ -1,3 +1,5 @@
+package com.rlgbs;
+
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PApplet;
@@ -168,9 +170,9 @@ public class WRVoronoi {
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
         List<Cell> gridNeighbours = neighbours.stream()
                 .filter(cell -> cell.site.x > a.site.x - gridSize
-                                && cell.site.x < a.site.x + gridSize
-                                && cell.site.y > a.site.y - gridSize
-                                && cell.site.y < a.site.y + gridSize)
+                        && cell.site.x < a.site.x + gridSize
+                        && cell.site.y > a.site.y - gridSize
+                        && cell.site.y < a.site.y + gridSize)
                 .sorted(new DistanceToCellComparator(a))
                 .collect(Collectors.toList());
 
