@@ -1,9 +1,9 @@
 package com.rlgbs;
 
-import processing.core.*;
+import processing.core.PApplet;
+import processing.core.PImage;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class RLBGStippling extends PApplet {
     int n = 1000;
@@ -118,12 +118,20 @@ public class RLBGStippling extends PApplet {
 //                pg.stroke(c);
 //                pg.fill(c);
 //                pg.beginShape();
+//                pg.curveVertex(polygon.get(0).x, polygon.get(0).y);
 //                for (Point p : polygon){
-//                    pg.vertex(p.x, p.y);
+//                    pg.curveVertex(p.x, p.y);
 //                }
-//                pg.endShape(CLOSE);
+//                pg.curveVertex(polygon.get(polygon.size()-1).x, polygon.get(polygon.size()-1).y);
+//                pg.endShape();
+//                for (Point p : polygon){
+//                    pg.stroke(0,255,0);
+//                    pg.fill(0,255,0);
+//                    pg.ellipse(p.x, p.y,2,2);
+//                }
 //            }
 //            pg.endDraw();
+//
 //            painter.changeBackground(pg.get());
 //            image = painter.getStippleImage();
 

@@ -1,13 +1,13 @@
 package com.rlgbs;
 
 import org.opencv.core.*;
-import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import processing.core.PConstants;
 import processing.core.PImage;
 
 import java.lang.reflect.Field;
-import java.nio.*;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,11 +97,21 @@ public class Imp {
         Core.bitwise_not(mat, mat);
         final List<MatOfPoint> contours = new ArrayList<>();
         final Mat hierarchy = new Mat();
-        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_NONE);
 
         Mat drawing = Mat.zeros(mat.size(), CvType.CV_8UC4);
 
-        List<List<Point>> polygons = new ArrayList<>(contours.size());
+        for (int i = 0; i < contours.size(); i++) {
+            MatOfPoint2f approxCurve = new MatOfPoint2f();
+            Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approxCurve, 1, true);
+
+            MatOfPoint2f gb = new MatOfPoint2f();
+            Imgproc.GaussianBlur(approxCurve, gb, new Size(3, 3), 10, 10);
+            //Convert back to MatOfPoint
+            MatOfPoint points = new MatOfPoint(gb.toArray());
+
+            contours.set(i, points);
+        }
 
         for (int i = 0; i < contours.size(); i++) {
             Scalar color;
@@ -110,7 +120,7 @@ public class Imp {
             else
                 color = new Scalar(255, 0, 255, 0);
 
-            Imgproc.drawContours(drawing, contours, i, color, 2,
+            Imgproc.drawContours(drawing, contours, i, color, 1,
                     Core.LINE_8, hierarchy, 0, new org.opencv.core.Point());
         }
         return toPImage(drawing);
@@ -170,11 +180,7 @@ public class Imp {
     private static List<com.rlgbs.Point> toPolygon(MatOfPoint matOfPoint) {
         List<org.opencv.core.Point> temp = matOfPoint.toList();
         List<com.rlgbs.Point> polygonPoints = new ArrayList<>(temp.size());
-
-        for (org.opencv.core.Point p : temp) {
-            com.rlgbs.Point newPoint = new com.rlgbs.Point((float) p.x, (float) p.y);
-            polygonPoints.add(newPoint);
-        }
+        temp.stream().forEach(p -> polygonPoints.add(new com.rlgbs.Point((float) p.x, (float) p.y)));
         return polygonPoints;
     }
 
