@@ -89,40 +89,87 @@ public class Imp {
     }
 
     // Trial method to find and draw contours using OpenCV.
-    public static PImage drawContours(PImage input) {
+    public static PImage postprocess(PImage input, int type) {
         nu.pattern.OpenCV.loadShared();
         System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+
         Mat mat = toMat(input);
-        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+        //Imgproc.blur(mat, mat, new Size(10, 10), new org.opencv.core.Point(-1, -1));
         Core.bitwise_not(mat, mat);
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2GRAY);
+
         final List<MatOfPoint> contours = new ArrayList<>();
         final Mat hierarchy = new Mat();
-        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_NONE);
-
-        Mat drawing = Mat.zeros(mat.size(), CvType.CV_8UC4);
+        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
 
         for (int i = 0; i < contours.size(); i++) {
-            MatOfPoint2f approxCurve = new MatOfPoint2f();
-            Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), approxCurve, 1, true);
-
-            MatOfPoint2f gb = new MatOfPoint2f();
-            Imgproc.GaussianBlur(approxCurve, gb, new Size(3, 3), 10, 10);
-            //Convert back to MatOfPoint
-            MatOfPoint points = new MatOfPoint(gb.toArray());
-
-            contours.set(i, points);
+            MatOfPoint2f poly = new MatOfPoint2f(contours.get(i).toArray());
+            double epsilon = 0.001 * Imgproc.arcLength(poly, true);
+            epsilon = Math.min(epsilon, 5);
+            Imgproc.approxPolyDP(poly, poly, epsilon, true);
+            contours.set(i, new MatOfPoint(poly.toArray()));
         }
 
+        List<MatOfPoint> procContours = new ArrayList<>();
+        if (type == 1) {
+            gaussianSmoothCurves(contours, procContours);
+        } else if (type == 2) {
+            reSampleCurves(contours, procContours);
+        } else if (type == 3) {
+            chaikinCurves(contours, procContours);
+        }
+
+        return drawContours(mat, procContours, hierarchy);
+
+    }
+
+    private static void gaussianSmoothCurves(List<MatOfPoint> contours, List<MatOfPoint> procContours) {
+        double sigma = 3;
+        double kernelSize = ((int) (sigma * 3.0 / 2.0)) * 2 + 1;
+
         for (int i = 0; i < contours.size(); i++) {
+            MatOfPoint2f poly = new MatOfPoint2f(contours.get(i).toArray());
+            Imgproc.GaussianBlur(poly, poly, new Size(kernelSize, kernelSize), sigma, sigma);
+            //Convert back to MatOfPoint
+            procContours.add(new MatOfPoint(poly.toArray()));
+        }
+    }
+
+    private static void reSampleCurves(List<MatOfPoint> contours, List<MatOfPoint> procContours) {
+        CurveSmoother cs = new CurveSmoother();
+        for (int i = 0; i < contours.size(); i++) {
+            procContours.add(cs.resampleCurve(contours.get(i), 10, true));
+        }
+    }
+
+    private static void chaikinCurves(List<MatOfPoint> contours, List<MatOfPoint> procContours) {
+
+    }
+
+    private static PImage drawContours(Mat mat, List<MatOfPoint> contours, Mat hierarchy) {
+        Mat drawing = Mat.zeros(mat.size(), CvType.CV_8UC4);
+        drawing.setTo(new Scalar(255, 255, 255, 255));
+
+        for (int i = 0; i < contours.size(); i++) {
+            Rect br = Imgproc.boundingRect(contours.get(i));
+            double bra = 2 * (br.width + br.height);
+            double blockPeri = 0.01 * 2 * (mat.size().height + mat.size().width);
+            if (bra < blockPeri) {
+                continue;
+            }
+
             Scalar color;
             if (hierarchy.get(0, i)[3] != -1)
-                color = new Scalar(255, 255, 0, 0);
+                color = new Scalar(255, 255, 255, 255);
             else
-                color = new Scalar(255, 0, 255, 0);
+                color = new Scalar(255, 0, 0, 0);
 
-            Imgproc.drawContours(drawing, contours, i, color, 1,
+            //Imgproc.circle(drawing, new org.opencv.core.Point( 300, 300), 5, new Scalar(255, 255, 0, 0),-1, 8, 0);
+
+            Imgproc.drawContours(drawing, contours, i, color, -1,
                     Core.LINE_8, hierarchy, 0, new org.opencv.core.Point());
         }
+
         return toPImage(drawing);
     }
 
@@ -186,7 +233,7 @@ public class Imp {
 
     // Convert PImage to Mat
     private static Mat toMat(PImage image) {
-        image.loadPixels(); //???
+        image.loadPixels();
         int w = image.width;
         int h = image.height;
 
@@ -199,7 +246,6 @@ public class Imp {
         iBuf.put(data32);
         bBuf.get(data8);
         mat.put(0, 0, data8);
-        image.updatePixels();
         return mat;
     }
 

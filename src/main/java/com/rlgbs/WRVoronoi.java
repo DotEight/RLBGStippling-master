@@ -1,14 +1,16 @@
 package com.rlgbs;
 
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
-import processing.core.PApplet;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static processing.core.PApplet.dist;
-import static processing.core.PConstants.*;
+import static processing.core.PConstants.P3D;
+import static processing.core.PConstants.QUAD_STRIP;
 
 // VORONOI CLASS #################################################################################################
 public class WRVoronoi {
@@ -57,7 +59,7 @@ public class WRVoronoi {
             int color = indexToColor(i);
             dg.fill(color);
             dg.pushMatrix();
-            dg.translate(site.x, site.y, 0);
+            dg.translate(site.x + 0.5f, site.y + 0.5f, 0);
 
             float angle = 0;
             dg.beginShape(QUAD_STRIP);

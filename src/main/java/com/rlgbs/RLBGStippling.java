@@ -11,9 +11,10 @@ public class RLBGStippling extends PApplet {
     StippleGenerator rLBGStippleGenerator;
     Painter painter;
     PImage reference, bg, image;
+    int sc = 0;
 
     public void settings() {
-        reference = loadImage("input1.jpg"); // Load the image into the program
+        reference = loadImage("input2.jpg"); // Load the image into the program
         size(reference.width * 2, reference.height * 2, P3D);
     }
 
@@ -135,10 +136,19 @@ public class RLBGStippling extends PApplet {
 //            painter.changeBackground(pg.get());
 //            image = painter.getStippleImage();
 
-            image = Imp.drawContours(painter.getBackgroundImage());
+            painter.postprocessBackground(1);
+            image = painter.getStippleImage();
+            PImage saveImage = createImage(image.width, image.height, ARGB);
+            saveImage.copy(image, 0, 0, image.width, image.height, 0, 0, saveImage.width, saveImage.height);
+            saveImage.save("background.jpg");
         }
 
+        if (key == 'k') {
+            save("/Users/kerem/Desktop/Saved" + this.getClass().hashCode() + sc + ".jpg");
+            sc++;
+        }
     }
+
 
     public static void main(String[] args) {
         PApplet.main("com.rlgbs.RLBGStippling", args);

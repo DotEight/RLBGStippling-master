@@ -3,7 +3,8 @@ package com.rlgbs;
 import processing.core.PApplet;
 import processing.core.PImage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Math.*;
 
@@ -93,28 +94,36 @@ class StippleGenerator {
         for (Cell cell : stippleCells) {
 
             float sd = getStippleDiameter(cell);
-            int c = 0;
-            if (cell.reverse == 1) {
-                c = 255;
-            }
-            stipples.add(cell.index, new Stipple(cell.centroid, pa.color(c), sd));
+            stipples.add(cell.index, new Stipple(cell.centroid, pa.color(cell.reverse * 255), sd));
 
-            float[] splitThresholds = getSplitThresholds(cell, sd, this.status.hysteresis);
+            float[] thresholds = getThresholds(cell, sd, this.status.hysteresis);
+            float lowerThreshold = thresholds[0];
+            float upperThreshold = thresholds[1];
             float cellDensity = cell.moments[0];
 
-            if (cellDensity < splitThresholds[0] || cell.area == 0) {
+            if (cellDensity < lowerThreshold || cell.area == 0) {
                 // Merge cell (dont do anything)
                 this.status.merges++;
                 continue;
             }
 
-            if (cellDensity > splitThresholds[1]) {
-                splitCell(cell);
-                // Split cell according to cell size and orientation
+            if (cellDensity > upperThreshold) {
+                if (cell.reverse != 1 || cell.cv > 0.2) {
+                    // Split cell according to cell size and orientation
+                    float splitAmount = (float) (0.5f * sqrt(max(1.0f, cell.area) / PI));
+                    float angle = cell.orientation;
+                    float splitX = (float) (splitAmount * cos(angle));
+                    float splitY = (float) (splitAmount * sin(angle));
 
-                continue;
+                    Point splitSeed1 = new Point(cell.centroid.x - splitX, cell.centroid.y - splitY);
+                    Point splitSeed2 = new Point(cell.centroid.x + splitX, cell.centroid.y + splitY);
+                    stippleSites.add(Tools.addJitter(splitSeed1, 0.001f));
+                    stippleSites.add(Tools.addJitter(splitSeed2, 0.001f));
+
+                    this.status.splits++;
+                    continue;
+                }
             }
-
             stippleSites.add(cell.centroid);
         }
         this.status.iterations++;
@@ -122,10 +131,10 @@ class StippleGenerator {
     }
 
     private void splitCell(Cell cell) {
-        if (cell.reverse == 1 && cell.cv <= 0.2) {
+ /*       if (cell.reverse == 1 && cell.cv <= 0.2) {
             stippleSites.add(cell.centroid);
             return;
-        }
+        }*/
         // Split cell according to cell size and orientation
         float splitAmount = (float) (0.5f * sqrt(max(1.0f, cell.area) / PI));
         float angle = cell.orientation;
@@ -169,7 +178,7 @@ class StippleGenerator {
         }
     }
 
-    private float[] getSplitThresholds(Cell cell, float stippleDiameter, float hysteresis) {
+    private float[] getThresholds(Cell cell, float stippleDiameter, float hysteresis) {
         float stippleArea = (float) (PI * pow(stippleDiameter / 2.0f, 2));
         float lowerValue = (float) ((1.0f - hysteresis / 2.0f) * stippleArea * pow(options.superSamplingFactor, 2));
 

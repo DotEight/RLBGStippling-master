@@ -4,15 +4,16 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
-import static processing.core.PConstants.*;
-
 import java.util.ArrayList;
+
+import static processing.core.PConstants.*;
 
 
 class Painter {
     PApplet pa;
     StippleGenerator stippleGenerator;
     PGraphics stippleImage;
+    PImage backgroundBuffer;
     PImage backgroundImage;
     boolean paintAddedSites = false;
     boolean showStippleIndexes = false;
@@ -27,7 +28,7 @@ class Painter {
         w = rlbgs.img.width;
         h = rlbgs.img.height;
         stippleImage = pa.createGraphics(2 * w, 2 * h);
-        stippleImage.smooth(2);
+        stippleImage.smooth(8);
         backgroundImage = pa.createImage(2 * w, 2 * h, RGB);
     }
 
@@ -46,10 +47,8 @@ class Painter {
     }
 
     PImage paint() {
-        this.backgroundImage = paintBackground();
-
         stippleImage.beginDraw();
-        this.stippleImage.background(this.backgroundImage);
+        this.stippleImage.background(paintBackground());
         paintStipples();
         if (paintAddedSites)
             paintAddedSites();
@@ -57,14 +56,13 @@ class Painter {
             showStippleIndexes();
         PImage image = stippleImage.get();
         stippleImage.endDraw();
+
         return image;
     }
 
-    void updateBackground() {
+    private void update() {
         stippleImage.beginDraw();
-        stippleImage.background(255);
         stippleImage.background(this.backgroundImage);
-
         paintStipples();
 
         if (paintAddedSites)
@@ -77,7 +75,7 @@ class Painter {
     }
 
     PImage paintBackground() {
-        backgroundImage.loadPixels();
+        backgroundImage.updatePixels();
         for (Cell stippleCell : stippleGenerator.getStippleCells()) {
             for (Point pp : stippleCell.pixelList) {
                 backgroundImage.pixels[(int) (2*pp.x)+ (int) (2*pp.y * backgroundImage.width)] = pa.color(255 * (1 - stippleCell.reverse));
@@ -96,7 +94,7 @@ class Painter {
             backgroundImage.pixels[(int) pp.x + (int) pp.y * w] = cc;
         }
         backgroundImage.updatePixels();
-        updateBackground();
+        update();
     }
 
     private void paintCells(ArrayList<Cell> cells, int cc) {
@@ -107,7 +105,7 @@ class Painter {
             }
         }
         backgroundImage.updatePixels();
-        updateBackground();
+        update();
     }
 
     private void paintStipples() {
@@ -116,7 +114,7 @@ class Painter {
             stippleImage.fill(s.c);
             float d = s.size;
             stippleImage.ellipseMode(CENTER);
-            stippleImage.ellipse(2*s.location.x, 2*s.location.y, 2*d, 2*d);
+            stippleImage.ellipse(2 * (s.location.x - s.size / 2), 2 * (s.location.y - s.size / 2), 2 * d, 2 * d);
         }
     }
 
@@ -143,21 +141,24 @@ class Painter {
         PImage temp = this.backgroundImage.get();
         temp.filter(BLUR, 2);
         temp.filter(THRESHOLD, 0.5f);
-        this.backgroundImage = temp;
-        updateBackground();
+        changeBackground(temp);
     }
 
     //  Method to perform erosion on the background. Foreground pixels are black in this instance.
-
-    public void changeBackground(PImage bg) {
-        this.backgroundImage = bg;
-        updateBackground();
+    public void erodeBackground(int diameter) {
+        changeBackground(Tools.erodeImage(this.backgroundImage, diameter));
     }
 
-    public void erodeBackground(int diameter) {
-        backgroundImage.loadPixels();
-        backgroundImage = Tools.erodeImage(this.backgroundImage, diameter);
-        updateBackground();
+    public void postprocessBackground(int type) {
+        PImage sbg = Imp.postprocess(this.backgroundImage, type);
+        for (Stipple s : stippleGenerator.getStipples()) {
+            if (sbg.get((int) s.location.x * 2, (int) s.location.y * 2) == pa.color(255))
+                s.c = pa.color(0);
+            else
+                s.c = pa.color(255);
+
+        }
+        changeBackground(sbg);
     }
 
     public void ellipse(float x, float y, float lambda1, float lambda2, float orientation) {
@@ -170,7 +171,10 @@ class Painter {
         stippleImage.beginDraw();
     }
 
-
+    public void changeBackground(PImage bg) {
+        this.backgroundImage = bg;
+        update();
+    }
     // TODO method to check boundaries and handle black cells near edges, contours etc.
 
 }
