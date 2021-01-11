@@ -1,13 +1,13 @@
 package com.rlgbs;
 
+import processing.core.PConstants;
+import processing.core.PGraphics;
+import processing.core.PImage;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-
-import processing.core.PConstants;
-import processing.core.PGraphics;
-import processing.core.PImage;
 
 public final class Tools {
 
@@ -76,11 +76,6 @@ public final class Tools {
         output.image(image, 0, 0);
         output.endDraw();
         return output;
-    }
-
-    public static Point addJitter(Point point, float range) {
-        float amount = 2 * range * rg.nextFloat() + range;
-        return new Point(point.x + amount, point.y + amount);
     }
 
     public static float random(float high) {
@@ -194,7 +189,7 @@ public final class Tools {
             float mF = (sum - sumB) / wF;    // Mean Foreground
 
             // Calculate Between Class Variance
-            float varBetween = (float)wB * (float)wF * (mB - mF) * (mB - mF);
+            float varBetween = (float) wB * (float) wF * (mB - mF) * (mB - mF);
 
             // Check if new maximum found
             if (varBetween > varMax) {
@@ -202,7 +197,14 @@ public final class Tools {
                 threshold = t;
             }
         }
-        return threshold/256.0f;
+        return threshold / 255.0f;
+    }
+
+    public static Point addJitter(Point point, float range) {
+        float amount = 2 * range * rg.nextFloat() + range;
+        point.x = point.x + amount;
+        point.y = point.y + amount;
+        return point;
     }
 
     public static PImage erodeImage(PImage input, int diameter) {

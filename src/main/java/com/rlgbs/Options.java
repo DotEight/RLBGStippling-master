@@ -14,10 +14,21 @@ public class Options {
     float initialHysteresis = 0.6f;
     float hysteresisDelta = 0.01f;
 
-    Options (int initialStipples, int maxIterations, int superSamplingFactor, boolean adaptiveStippleSize) {
+    Options(int initialStipples, int maxIterations, int superSamplingFactor, boolean adaptiveStippleSize) {
         this.initialStipples = initialStipples;
         this.maxIterations = maxIterations;
         this.superSamplingFactor = superSamplingFactor;
         this.adaptiveStippleSize = adaptiveStippleSize;
+    }
+
+    void setStippleSize(float initialStippleDiameter, float stippleSizeMin, float stippleSizeMax) {
+        this.initialStippleDiameter = initialStippleDiameter;
+        this.stippleSizeMin = stippleSizeMin;
+        this.stippleSizeMax = stippleSizeMax;
+    }
+
+    void setHysteresis(float initialHysteresis, float hysteresisDelta) {
+        this.initialHysteresis = initialHysteresis;
+        this.hysteresisDelta = hysteresisDelta;
     }
 }

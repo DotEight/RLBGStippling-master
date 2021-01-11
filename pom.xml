@@ -23,8 +23,11 @@
     <repositories>
         <repository>
             <id>Central</id>
-            <url>https://repo1.maven.org/maven2/
-            </url>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>JCenter</id>
+            <url>https://jcenter.bintray.com/</url>
         </repository>
     </repositories>
 
@@ -32,18 +35,33 @@
         <dependency>
             <groupId>org.openpnp</groupId>
             <artifactId>opencv</artifactId>
-            <version>3.4.2-2</version>
+            <version>4.3.0-1</version>
         </dependency>
+
         <dependency>
             <groupId>org.processing</groupId>
             <artifactId>core</artifactId>
             <version>3.3.7</version>
         </dependency>
+
+        <dependency>
+            <groupId>quil</groupId>
+            <artifactId>processing-svg</artifactId>
+            <version>3.3.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>fop</artifactId>
+            <version>2.5</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jogamp.jogl</groupId>
             <artifactId>jogl-all-main</artifactId>
             <version>2.3.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.jogamp.gluegen</groupId>
             <artifactId>gluegen-rt-main</artifactId>
@@ -54,6 +72,13 @@
             <groupId>com.github.dpaukov</groupId>
             <artifactId>combinatoricslib3</artifactId>
             <version>3.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.kynosarges</groupId>
+            <artifactId>tektosyne</artifactId>
+            <version>6.2.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
