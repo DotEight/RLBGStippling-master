@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
@@ -148,7 +148,7 @@ class StipplePainter {
         for (int i = 0; i < contours.size(); i++) {
             paintStipplesOnContour(contours.get(i).getVetices());
         }
-        //paintStipples();
+        paintStipples();
         stippleImage.endDraw();
     }
 

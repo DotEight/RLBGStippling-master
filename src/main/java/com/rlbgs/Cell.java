@@ -1,4 +1,7 @@
-package com.rlgbs;
+package com.rlbgs;
+
+import processing.core.PApplet;
+import processing.core.PImage;
 
 import java.util.ArrayList;
 
@@ -8,6 +11,7 @@ import static java.lang.Math.*;
 class Cell {
     int index;
     int reverse = 0;
+    int onBorder = 0;
 
     ArrayList<Point> pixelList = new ArrayList<>();
     ArrayList<Point> whitePixelList = new ArrayList<>();
@@ -36,11 +40,12 @@ class Cell {
     }
 
     void resetProperties() {
+        this.onBorder = 0;
         this.orientation = 0;
         this.eccentricity = 0;
         this.cv = 0;
         this.moments = new float[6];
-        this.site = new Point(0, 0);
+        //this.site = new Point(0, 0);
         this.centroid = new Point(0, 0);
     }
 
@@ -62,13 +67,13 @@ class Cell {
             moments[4] += x * x * densityValue;
             moments[5] += y * y * densityValue;
 
-            float diff = avgDensity - densityMatrix[x][y];
+            float diff = densityMatrix[x][y] - avgDensity;
             sigmaDiff += diff * diff;
         }
 
         // Calculate higher order properties
         // Standart deviation
-        cv = (float) sqrt(sigmaDiff / area) / avgDensity;
+        cv = (float) sqrt(sigmaDiff * 255 / area) / (avgDensity * 255);
 
         // Moments are placed in the array from 0 to 5 with the order: m00, m10, m01, m11, m20, m02
         float[] m = moments;
@@ -90,6 +95,52 @@ class Cell {
         double lambda2 = (x + z) / 2 - Math.sqrt(4 * Tools.sq(y) + Tools.sq(x - z)) / 2;
         eccentricity = (float) Math.sqrt((1 - lambda2 / lambda1));
         //eccentricity = (float) (((com.rlgbs.Tools.sq(x - z)) - (4 * com.rlgbs.Tools.sq(y))) / com.rlgbs.Tools.sq(x + z));
+    }
+
+    void evaluateCell(float[][] densityMatrix, PImage adjustImage, PApplet pa) {
+        ArrayList<Point> pixels = pixelList;
+        ArrayList<Point> whitePixels = new ArrayList<>();
+        ArrayList<Point> blackPixels = new ArrayList<>();
+
+        for (Point p : pixels) {
+            int x = (int) p.x;
+            int y = (int) p.y;
+            int index = x + adjustImage.width * y;
+            int color = adjustImage.pixels[index];
+
+            if (color == pa.color(255)) {
+                whitePixels.add(p);
+            } else if (color == pa.color(0)) {
+                blackPixels.add(p);
+            }
+        }
+
+        int ci = (int) centroid.x + adjustImage.width * (int) centroid.y;
+        int cc = adjustImage.pixels[ci];
+        if (cc == pa.color(255)) {
+            reverse = 0;
+            pixelList = whitePixels;
+        } else {
+            reverse = 1;
+            pixelList = blackPixels;
+        }
+
+//        double diff = abs(whitePixels.size() - blackPixels.size());
+//
+//        if (whitePixels.size() > blackPixels.size()) {
+//            c.reverse = 0;
+//            if (diff != c.area) {
+//                c.pixelList = whitePixels;
+//            }
+//        } else {
+//            c.reverse = 1;
+//            if (diff != c.area) {
+//                c.pixelList = blackPixels;
+//            }
+//        }
+
+        calculateProperties(densityMatrix);
+        pixelList = pixels;
     }
 
     public void flip() {

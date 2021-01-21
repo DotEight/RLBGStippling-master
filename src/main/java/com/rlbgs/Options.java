@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 public class Options {
     int initialStipples = 1;

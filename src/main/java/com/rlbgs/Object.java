@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import java.util.List;
 
@@ -8,6 +8,11 @@ import static java.lang.Math.sqrt;
 // POINT CLASS ###################################################################################################
 class Point {
     float x, y;
+
+    Point() {
+        this.x = -1;
+        this.y = -1;
+    }
 
     Point(float x, float y) {
         this.x = x;

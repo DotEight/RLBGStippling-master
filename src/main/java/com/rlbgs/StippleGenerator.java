@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -37,7 +37,7 @@ class StippleGenerator {
         //img.resize(img.width * ssf, 0);
         this.img = img;
         this.densityMatrix = Tools.createDensityMatrix(img);
-        this.wrv = new WRVoronoi(pa, densityMatrix.length, densityMatrix[0].length, densityMatrix, 1 - (th / 2 / 255));
+        this.wrv = new WRVoronoi(pa, densityMatrix.length, densityMatrix[0].length, densityMatrix, 1 - (th / 255));
         initStipples();
     }
 
@@ -80,7 +80,7 @@ class StippleGenerator {
         this.acceptedStipples.clear();
 
         this.densityMatrix = Tools.createDensityMatrix(img);
-        this.wrv = new WRVoronoi(pa, densityMatrix.length, densityMatrix[0].length, densityMatrix, th / 255);
+        this.wrv = new WRVoronoi(pa, densityMatrix.length, densityMatrix[0].length, densityMatrix, 1 - (th / 255));
         initStipples();
     }
 
@@ -101,7 +101,8 @@ class StippleGenerator {
     }
 
     public void addStipples(ArrayList<Stipple> stipples) {
-        this.stipples.addAll(stipples);
+        if (stipples != null)
+            this.stipples.addAll(stipples);
     }
 
     public ArrayList<Cell> getStippleCells() {
@@ -164,7 +165,7 @@ class StippleGenerator {
         stippleSites = getStippleSites();
 
         wrv.setSites(stippleSites);
-        stippleCells = wrv.collectCells(densityMatrix, true);
+        stippleCells = wrv.collectCells(densityMatrix, false);
         adjustStipples(adjustImage);
         stipples.clear();
         deletedStipples.clear();
@@ -249,17 +250,20 @@ class StippleGenerator {
     }
 
     public void adjustRelax(PImage adjustImage) {
+//        for (Cell c : getStippleCells()) {
+//            evaluateCell(c, adjustImage);
+//        }
         ArrayList<Point> sites = getStippleSites();
         wrv.setSites(sites);
         stippleCells = wrv.collectCells(densityMatrix, false);
+        //stippleCells = wrv.relax(densityMatrix);
 
         //stipples.clear();
         adjustImage.loadPixels();
-
         for (Cell c : getStippleCells()) {
             evaluateCell(c, adjustImage);
             float sd = getStippleDiameter(c);
-            //sd = stipples.get(c.index).size;
+            //float sd = stipples.get(c.index).size;
             stipples.set(c.index, new Stipple(c.index, c.centroid, pa.color(c.reverse * 255), sd));
         }
     }
@@ -298,10 +302,16 @@ class StippleGenerator {
         if (cc == pa.color(255)) {
             c.reverse = 0;
             c.pixelList = whitePixels;
-        } else {
+        } else if (cc == pa.color(0)) {
             c.reverse = 1;
             c.pixelList = blackPixels;
+        } else {
+            c.pixelList = new ArrayList<>();
+            c.pixelList.add(new Point(0, 0));
         }
+
+        if (whitePixels.size() != 0 && blackPixels.size() != 0)
+            c.onBorder = 1;
 
 //        double diff = abs(whitePixels.size() - blackPixels.size());
 //
@@ -337,12 +347,17 @@ class StippleGenerator {
         ArrayList<Stipple> newStipples = new ArrayList<>();
         for (Cell c : getStippleCells()) {
             System.out.println(c.eccentricity);
-            if (c.eccentricity < 0.8) {
+            //float th = c.eccentricity * abs(c.reverse - c.avgDensity) * c.cv;
+            boolean th = c.eccentricity < 0.75 && abs(c.reverse - c.avgDensity) > 0.001 && c.cv < 10;
+            if (th) {
                 float sd = getStippleDiameter(c);
                 newStipples.add(new Stipple(c.index, c.centroid, pa.color(c.reverse * 255), sd));
             }
         }
         stipples = newStipples;
+        ArrayList<Point> sites = getStippleSites();
+        wrv.setSites(sites);
+        stippleCells = wrv.collectCells(densityMatrix, false);
     }
 
     public void cleanBorders(int borderSize) {
@@ -398,6 +413,8 @@ class StippleGenerator {
     }
 
     private float getStippleDiameter(Cell cell) {
+//        if(cell.onBorder == 1)
+//            return options.stippleSizeMin;
         if (options.adaptiveStippleSize) {
             // First element in moments array is the sum density that also takes reversed status into account
             // If the cell is reversed, lighter areas are considered more dense

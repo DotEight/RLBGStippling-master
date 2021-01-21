@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import processing.core.PConstants;
 import processing.core.PGraphics;

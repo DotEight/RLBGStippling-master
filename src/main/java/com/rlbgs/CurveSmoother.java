@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;

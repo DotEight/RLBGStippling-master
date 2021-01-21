@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 // STIPPLE MAP CLASS (MAYBE) #####################################################################################
 public class StippleMap {

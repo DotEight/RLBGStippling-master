@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -433,10 +433,10 @@ public class Imp {
     }
 
     // Helper method to convert OpenCV MatOfPoint data structure to a nested list of points
-    private static List<com.rlgbs.Point> convertToPoints(MatOfPoint contour) {
+    private static List<com.rlbgs.Point> convertToPoints(MatOfPoint contour) {
         List<org.opencv.core.Point> temp = contour.toList();
-        List<com.rlgbs.Point> polygonPoints = new ArrayList<>(temp.size());
-        temp.stream().forEach(p -> polygonPoints.add(new com.rlgbs.Point((float) p.x, (float) p.y)));
+        List<com.rlbgs.Point> polygonPoints = new ArrayList<>(temp.size());
+        temp.stream().forEach(p -> polygonPoints.add(new com.rlbgs.Point((float) p.x, (float) p.y)));
         return polygonPoints;
     }
 
@@ -469,20 +469,29 @@ public class Imp {
         Core.bitwise_not(mat, mat);
 
         findContours(mat);
-        drawContours(0.0, -1);
+        drawContours(0.02, -1);
         Imgproc.cvtColor(currentDrawingMat, mat, Imgproc.COLOR_BGRA2GRAY);
 
         Core.bitwise_not(mat, mat);
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7));
         //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
         //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
 
         findContours(mat);
     }
 
-    public static PImage processImage(PImage reference, int th) {
+    public static PImage prepareImage(PImage reference, int th) {
+        Mat input = prepareMat(reference);
+        currentMat = input;
+        Mat mat = new Mat();
+        Imgproc.bilateralFilter(input, mat, 3, 75, 75);
+        Imgproc.threshold(mat, mat, th, 255, Imgproc.THRESH_BINARY);
+        return toPImage(mat);
+    }
+
+    public static void processImage(PImage reference, int th) {
         Mat input = prepareMat(reference);
         currentMat = input;
         Mat mat = new Mat();
@@ -495,10 +504,10 @@ public class Imp {
 
         startProcess(mat);
         gaussianSmoothContours(5);
-        approximateContours(10, true);
+        approximateContours(10, false);
         chaikinSmoothContours(2, PConstants.PI / 12);
-        drawContours(0.02, -1);
-        return toPImage(currentDrawingMat);
+        drawContours(0.0, -1);
+        //return toPImage(currentDrawingMat);
     }
 
     public static PImage createBackground(PImage reference, int th) {

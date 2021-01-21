@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.rlgbs;
+package com.rlbgs;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
@@ -170,10 +170,10 @@ public class WRVoronoi {
     }
 
     public ArrayList<Cell> relax(float[][] densityMatrix) {
+
         for (Cell c : this.cells) {
-            Point s = sites.get(c.index);
-            s.setX(c.centroid.x);
-            s.setY(c.centroid.y);
+            sites.set(c.index, new Point(c.centroid.x, c.centroid.y));
+            c.resetProperties();
             c.pixelList = new ArrayList<>();
         }
 
