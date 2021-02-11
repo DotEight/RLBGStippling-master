@@ -34,8 +34,7 @@ public class Imp {
     private static int trimapBorderSize;
 
     static {
-        nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+        nu.pattern.OpenCV.loadLocally();
     }
 
     public static void setPApplet(PApplet pApplet) {
@@ -397,7 +396,7 @@ public class Imp {
             Imgproc.drawContours(drawing, currentContours, i, patchColor, thickness,
                     Imgproc.LINE_8, currentHierarchy, 0, new org.opencv.core.Point());
         }
-
+        Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_BGRA2GRAY);
         currentDrawingMat = drawing;
 
         return toPImage(drawing);
@@ -469,17 +468,17 @@ public class Imp {
         Core.bitwise_not(mat, mat);
 
         findContours(mat);
-        drawContours(0.02, -1);
-        Imgproc.cvtColor(currentDrawingMat, mat, Imgproc.COLOR_BGRA2GRAY);
+        //drawContours(0.02, -1);
+        //Imgproc.cvtColor(currentDrawingMat, mat, Imgproc.COLOR_BGRA2GRAY);
 
-        Core.bitwise_not(mat, mat);
+        //Core.bitwise_not(mat, mat);
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7));
         //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
+        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
         //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
 
-        findContours(mat);
+        //findContours(mat);
     }
 
     public static PImage prepareImage(PImage reference, int th) {

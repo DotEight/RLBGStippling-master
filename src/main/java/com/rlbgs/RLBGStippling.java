@@ -29,10 +29,11 @@ public class RLBGStippling extends PApplet {
 
     private String sessionID;
     private String refName;
+    private boolean animate = false;
 
     public void settings() {
         Imp.setPApplet(this);
-        refName = "galata.jpg";
+        refName = "woman.jpg";
         reference = loadImage(refName); // Load the image into the program
         //reference.filter(PConstants.BLUR, 1);9a
         //reference = Imp.invert(reference);
@@ -53,10 +54,20 @@ public class RLBGStippling extends PApplet {
         stippleGenerator = new StippleGenerator(this, reference, options, th);
         stipplePainter = new StipplePainter(this, stippleGenerator, scale);
         stipplePainter.clearBackground();
+        adjustImage = stipplePainter.getBackgroundImage();
         image = reference;
     }
 
     public void draw() {
+        if (animate) {
+            if (!stippleGenerator.finished()) {
+                stippleGenerator.adjustIterate(adjustImage);
+                System.out.println(stippleGenerator.getStipples().size());
+                System.out.println("Iteration " + stippleGenerator.status.iterations + " complete");
+                System.out.println("Splits: " + stippleGenerator.status.splits + " Merges: " + stippleGenerator.status.merges);
+                image = stipplePainter.update();
+            }
+        }
         image(image, 0, 0);
     }
 
@@ -103,7 +114,6 @@ public class RLBGStippling extends PApplet {
                 stipplePainter.paint();
 
                 image = stipplePainter.getStippleImage();
-                redraw();
             }
         }
 
@@ -225,20 +235,7 @@ public class RLBGStippling extends PApplet {
         }
 
         if (key == '6') {
-            PImage bg;
-            if (adjustImage == null)
-                bg = stipplePainter.getBackgroundImage();
-            else
-                bg = adjustImage;
-
-            while (!stippleGenerator.finished()) {
-                stippleGenerator.adjustIterate(bg);
-                System.out.println(stippleGenerator.getStipples().size());
-                System.out.println("Iteration " + stippleGenerator.status.iterations + " complete");
-                System.out.println("Splits: " + stippleGenerator.status.splits + " Merges: " + stippleGenerator.status.merges);
-                image = stipplePainter.update();
-                redraw();
-            }
+            animate = !animate;
 
         }
 
