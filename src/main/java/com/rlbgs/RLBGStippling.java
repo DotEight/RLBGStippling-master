@@ -57,7 +57,7 @@ public class RLBGStippling extends PApplet {
         thresholdFactor = 0.75;
 
         options = new Options(4, 100, 1, true);
-        options.setStippleSize(3, 4, 4);
+        options.setStippleSize(3, 3, 6);
         options.setHysteresis(0.6f, 0.02f);
 
         th = Tools.computeOtsuThreshold(reference) * 255 * (float) thresholdFactor;
