@@ -34,8 +34,8 @@ public class Imp {
     private static int trimapBorderSize;
 
     static {
-        nu.pattern.OpenCV.loadShared();
-        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+        nu.pattern.OpenCV.loadLocally();
+        //System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     public static void setPApplet(PApplet pApplet) {
