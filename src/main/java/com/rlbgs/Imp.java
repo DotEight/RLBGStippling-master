@@ -34,7 +34,8 @@ public class Imp {
     private static int trimapBorderSize;
 
     static {
-        nu.pattern.OpenCV.loadLocally();
+        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
     }
 
     public static void setPApplet(PApplet pApplet) {
@@ -146,13 +147,9 @@ public class Imp {
     public static void updateContours() {
         Mat mat = new Mat();
         Imgproc.cvtColor(currentDrawingMat, mat, Imgproc.COLOR_BGRA2GRAY);
-        Core.bitwise_not(mat, mat);
+        //Core.bitwise_not(mat, mat);
 
-        final List<MatOfPoint> contours = new ArrayList<>();
-        final Mat hierarchy = new Mat();
-        Imgproc.findContours(mat, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_NONE);
-        currentContours = contours;
-        currentHierarchy = hierarchy;
+        findContours(mat);
     }
 
     private static void filterContours(double factor) {
@@ -316,7 +313,7 @@ public class Imp {
         return procContours;
     }
 
-    public static List<MatOfPoint> chaikinSmoothContours(int iterations, float angleThreshold) {
+    public static List<MatOfPoint> chaikinSmoothContours(int iterations, double angleThreshold) {
         List<MatOfPoint> procContours = new ArrayList<>();
         for (int i = 0; i < currentContours.size(); i++) {
             List<org.opencv.core.Point> pl = currentContours.get(i).toList();
@@ -332,7 +329,7 @@ public class Imp {
         return procContours;
     }
 
-    private static List<org.opencv.core.Point> chaikinSmooth(List<org.opencv.core.Point> pl, float angleThreshold) {
+    private static List<org.opencv.core.Point> chaikinSmooth(List<org.opencv.core.Point> pl, double angleThreshold) {
         List<org.opencv.core.Point> newpl = new ArrayList<>();
         for (int i = 0; i < pl.size(); i++) {
 
@@ -371,14 +368,14 @@ public class Imp {
         return newpl;
     }
 
-    public static PImage drawContours(double epsilon, int thickness) {
+    public static PImage drawContours(double filterFactor, int thickness) {
         Scalar white = new Scalar(255, 255, 255, 255);
         Scalar black = new Scalar(0, 0, 0, 255);
 
         Mat drawing = Mat.zeros(currentMat.size(), CvType.CV_8UC4);
-        drawing.setTo(white);
+        drawing.setTo(black);
 
-        double minArea = getMaxContourArea() * epsilon;
+        double minArea = getMaxContourArea() * filterFactor;
         //double[] areaLimits = getAreaLimits();
         //minArea = areaLimits[1] * epsilon;
         for (int i = 0; i < currentContours.size(); i++) {
@@ -389,26 +386,57 @@ public class Imp {
             int parentID = (int) currentHierarchy.get(0, i)[3];
             Scalar patchColor;
             if (parentID != -1) {
-                patchColor = white;
-            } else {
                 patchColor = black;
+            } else {
+                patchColor = white;
             }
             Imgproc.drawContours(drawing, currentContours, i, patchColor, thickness,
                     Imgproc.LINE_8, currentHierarchy, 0, new org.opencv.core.Point());
         }
-        Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_BGRA2GRAY);
+
+        currentDrawingMat = drawing;
+
+        return toPImage(drawing);
+    }
+
+    public static PImage drawContoursReverse(double filterFactor, int thickness) {
+        Scalar white = new Scalar(255, 255, 255, 255);
+        Scalar black = new Scalar(0, 0, 0, 255);
+
+        Mat drawing = Mat.zeros(currentMat.size(), CvType.CV_8UC4);
+        drawing.setTo(black);
+
+        double minArea = getMaxContourArea() * filterFactor;
+        //double[] areaLimits = getAreaLimits();
+        //minArea = areaLimits[1] * epsilon;
+        for (int i = 0; i < currentContours.size(); i++) {
+            double polyArea = Imgproc.contourArea(currentContours.get(i));
+            if (polyArea < minArea)
+                continue;
+
+            int parentID = (int) currentHierarchy.get(0, i)[3];
+            Scalar patchColor;
+            if (parentID != -1) {
+                patchColor = black;
+            } else {
+                patchColor = white;
+            }
+            Imgproc.drawContours(drawing, currentContours, i, patchColor, thickness,
+                    Imgproc.LINE_8, currentHierarchy, 0, new org.opencv.core.Point());
+        }
+
         currentDrawingMat = drawing;
 
         return toPImage(drawing);
     }
 
     // Iterates over the list of found contours and converts them. Returns a nested point list.
-    public static List<Polygon> getPolygons() {
+    public static List<Polygon> getPolygons(double filterFactor) {
         //filterContours(0.02);
 
 
         List<Polygon> polygons = new ArrayList<>(currentContours.size());
-        double minArea = getMaxContourArea() * 0.02;
+        double minArea = getMaxContourArea() * filterFactor;
         int white = pa.color(255);
         int black = pa.color(0);
 
@@ -462,23 +490,30 @@ public class Imp {
     }
 
     // Trial method to find and draw contours using OpenCV.
-    public static void startProcess(Mat mat) {
+    public static PImage startProcess(Mat mat) {
         currentMat = mat;
 
-        Core.bitwise_not(mat, mat);
-
-        findContours(mat);
-        //drawContours(0.02, -1);
-        //Imgproc.cvtColor(currentDrawingMat, mat, Imgproc.COLOR_BGRA2GRAY);
-
         //Core.bitwise_not(mat, mat);
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(7, 7));
-        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
-        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
-        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
-        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
 
         //findContours(mat);
+        //drawContours(0.00, -1);
+        //Imgproc.cvtColor(currentDrawingMat, mat, Imgproc.COLOR_BGRA2GRAY);
+
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
+        //Imgproc.dilate(mat, mat, element);
+        //Imgproc.erode(mat, mat, element);
+        //Imgproc.erode(mat, mat, element);
+        //Imgproc.dilate(mat, mat, element);
+        //Imgproc.dilate(mat, mat, element);
+
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
+        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, element);
+
+        //Core.bitwise_not(mat, mat);
+        findContours(mat);
+        return toPImage(mat);
     }
 
     public static PImage prepareImage(PImage reference, int th) {

@@ -1,20 +1,23 @@
 package com.rlbgs;
 
 import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PImage;
 import processing.data.IntList;
 
 import java.util.ArrayList;
 
 public class RLBGStippling extends PApplet {
+    public double maxDelta;
+    public double sigma;
+    public double angleThreshold;
+    public double filterFactor;
+    public double thresholdFactor;
+
     int n = 1000;
     ArrayList<Stipple> stipples;
     ArrayList<Stipple> borderStipples;
 
     StippleGenerator stippleGenerator;
-    StippleGenerator whiteStippleGenerator;
-    StippleGenerator blackStippleGenerator;
 
     StipplePainter stipplePainter;
     PImage reference, staticBackground, adjustImage, image;
@@ -47,10 +50,17 @@ public class RLBGStippling extends PApplet {
 
     public void setup() {
         //reference.filter(GRAY);
+        maxDelta = 5;
+        sigma = 5;
+        angleThreshold = PI / 4;
+        filterFactor = 0.02;
+        thresholdFactor = 1;
+
         options = new Options(4, 100, 1, true);
-        options.setStippleSize(3, 2, 4);
+        options.setStippleSize(3, 3, 6);
         options.setHysteresis(0.6f, 0.02f);
-        th = Tools.computeOtsuThreshold(reference) * 255;
+
+        th = Tools.computeOtsuThreshold(reference) * 255 * (float) thresholdFactor;
         stippleGenerator = new StippleGenerator(this, reference, options, th);
         stipplePainter = new StipplePainter(this, stippleGenerator, scale);
         stipplePainter.clearBackground();
@@ -87,7 +97,7 @@ public class RLBGStippling extends PApplet {
 
     public void keyPressed() {
         if (key == 'i') {
-            stippleGenerator.adjustIterate(Imp.createBackground(reference, (int) th / 2));
+            stippleGenerator.adjustIterate(Imp.createBackground(reference, (int) th));
             System.out.println(stippleGenerator.getStipples().size());
             System.out.println("Iteration " + stippleGenerator.status.iterations + " complete");
             System.out.println("Splits: " + stippleGenerator.status.splits + " Merges: " + stippleGenerator.status.merges);
@@ -144,10 +154,10 @@ public class RLBGStippling extends PApplet {
 
         if (key == 'p') {
             Imp.startProcess(Imp.prepareMat(stipplePainter.getBackgroundImage()));
-            Imp.gaussianSmoothContours(3);
-            Imp.approximateContours(5, true);
-            Imp.chaikinSmoothContours(2, PConstants.PI / 6);
-            PImage newBackground = Imp.drawContours(0.0, -1);
+            Imp.gaussianSmoothContours(sigma);
+            Imp.approximateContours(maxDelta, true);
+            Imp.chaikinSmoothContours(2, angleThreshold);
+            PImage newBackground = Imp.drawContours(filterFactor, -1);
             adjustImage = newBackground;
             stipplePainter.changeBackground(newBackground);
             image = stipplePainter.getStippleImage();
@@ -157,31 +167,31 @@ public class RLBGStippling extends PApplet {
         }
 
         if (key == 'a') {
-            Imp.startProcess(Imp.prepareMat(stipplePainter.getBackgroundImage()));
-            PImage newBackground = Imp.drawContours(0.02, -1);
-            //Imp.updateContours();
+            PImage img = Imp.startProcess(Imp.prepareMat(stipplePainter.getBackgroundImage()));
+            PImage newBackground = Imp.drawContours(filterFactor, -1);
+            Imp.updateContours();
 
             adjustImage = newBackground;
             stipplePainter.changeBackground(newBackground);
             image = stipplePainter.getStippleImage();
         }
         if (key == 's') {
-            Imp.gaussianSmoothContours(5);
-            PImage newBackground = Imp.drawContours(0.02, -1);
+            Imp.gaussianSmoothContours(sigma);
+            PImage newBackground = Imp.drawContours(0, -1);
             adjustImage = newBackground;
             stipplePainter.changeBackground(newBackground);
             image = stipplePainter.getStippleImage();
         }
         if (key == 'd') {
-            Imp.approximateContours(5, false);
-            PImage newBackground = Imp.drawContours(0.02, -1);
+            Imp.approximateContours(maxDelta, false);
+            PImage newBackground = Imp.drawContours(0, -1);
             adjustImage = newBackground;
             stipplePainter.changeBackground(newBackground);
             image = stipplePainter.getStippleImage();
         }
         if (key == 'f') {
-            Imp.chaikinSmoothContours(2, PConstants.PI / 4);
-            PImage newBackground = Imp.drawContours(0.02, -1);
+            Imp.chaikinSmoothContours(2, angleThreshold);
+            PImage newBackground = Imp.drawContours(0, -1);
             adjustImage = newBackground;
             stipplePainter.changeBackground(newBackground);
             staticBackground = newBackground;
@@ -199,13 +209,13 @@ public class RLBGStippling extends PApplet {
         }
 
         if (key == '1') {
-            PImage whiteSource = Imp.createWhiteSource(reference, (int) th / 2);
+            PImage whiteSource = Imp.createWhiteSource(reference, (int) th);
             stippleGenerator.restart(whiteSource, options, 0);
             image = whiteSource;
         }
 
         if (key == '2') {
-            PImage blackSource = Imp.createBlackSource(reference, (int) th / 2);
+            PImage blackSource = Imp.createBlackSource(reference, (int) th);
             stippleGenerator.restart(blackSource, options, 255);
             image = blackSource;
         }
@@ -258,7 +268,7 @@ public class RLBGStippling extends PApplet {
             borderStipples.addAll(stippleGenerator.getStipples());
             stipplePainter.changeBackground(adjustImage);
             image = stipplePainter.getStippleImage();
-            stippleGenerator.restart(reference, options, 255 - (th / 2));
+            stippleGenerator.restart(reference, options, 255 - (th));
         }
 
         if (key == '9') {
@@ -283,7 +293,7 @@ public class RLBGStippling extends PApplet {
             image = stipplePainter.getStippleImage();*/
             //Imp.updateContours();
             Imp.updateContours();
-            stipplePainter.paintStipplesOnContours(Imp.getPolygons());
+            stipplePainter.paintStipplesOnContours(Imp.getPolygons(filterFactor));
             image = stipplePainter.getStippleImage();
 //            stippleGenerator.addStipples(borderStipples);
 //            stipplePainter.changeBackground(staticBackground);
@@ -291,16 +301,11 @@ public class RLBGStippling extends PApplet {
         }
 
         if (key == 'm') {
-            //PImage gradient = adjustImage.get();
-            //gradient.filter(BLUR, 5);
-
-            //image = gradient;
-
-            image = stippleGenerator.modifyDensityMatrix(adjustImage, 2);
+            image = stippleGenerator.modifyDensityMatrix(adjustImage, 2, 0.5f);
         }
 
         if (key == 'v') {
-            stipplePainter.saveSVG();
+            stipplePainter.saveSVG(filterFactor);
         }
 
         if (key == 'd') {
