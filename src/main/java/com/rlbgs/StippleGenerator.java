@@ -41,14 +41,20 @@ class StippleGenerator {
         initStipples();
     }
 
-    public PImage modifyDensityMatrix(PImage adjustImage, int factor) {
-        PImage gradient = Imp.getContourGradient(factor);
-        PImage newimg = pa.createImage(img.width, img.height, PConstants.ARGB);
-        float[][] grad = Tools.createDensityMatrix(gradient);
+    public PImage modifyDensityMatrix(PImage adjustImage, int gradientSize, float intensity) {
+        PImage gradient = Imp.getContourGradient(gradientSize);
+        gradient.filter(PConstants.INVERT);
+
         int black = pa.color(0);
         int white = pa.color(255);
-        newimg.loadPixels();
+
+        PImage newImg = pa.createImage(img.width, img.height, PConstants.ARGB);
+
+        newImg.loadPixels();
+        img.loadPixels();
         adjustImage.loadPixels();
+        gradient.loadPixels();
+        /*
         for (int x = 0; x < densityMatrix.length; x++) {
             for (int y = 0; y < densityMatrix[0].length; y++) {
                 float value = densityMatrix[x][y];
@@ -62,8 +68,33 @@ class StippleGenerator {
                 newimg.pixels[index] = pa.color(1 - densityMatrix[x][y]) * 255;
             }
         }
-        newimg.updatePixels();
-        return newimg;
+        */
+        for (int x = 0; x < img.width; x++) {
+            for (int y = 0; y < img.height; y++) {
+                int index = x + y * img.width;
+
+                float backColor = pa.brightness(adjustImage.pixels[index]);
+                float val = pa.brightness(img.pixels[index]);
+                float gradVal = pa.brightness(gradient.pixels[index]);
+                float modVal = 0;
+
+                //System.out.println("back color at X: " + x + ", Y: " + y + " = " + backColor);
+                //System.out.println("pixel value = " + val + ", gradient value = " + gradVal);
+
+                //if (backColor == 0) {
+                //    modVal = intensity * (gradVal / 255) * (255 - val);
+                //} else if (backColor == 255){
+                //    modVal = -1 * intensity * (gradVal / 255) * val;
+                //}
+                modVal = (intensity * (gradVal / 255) * (255 - backColor - val));
+                //System.out.println("modifying value = " + modVal + ", modified value = " + (val + modVal));
+                //System.out.println("--------------------------------------------------------");
+                newImg.pixels[index] = pa.color((val + modVal));
+            }
+        }
+        newImg.updatePixels();
+        this.densityMatrix = Tools.createDensityMatrix(newImg);
+        return newImg;
     }
 
     public void restart(PImage img, Options options, float th) {
@@ -329,6 +360,24 @@ class StippleGenerator {
 
         c.calculateProperties(densityMatrix);
         c.pixelList = pixels;
+    }
+
+    private void directEvaluateCell(Cell c, PImage adjustImage) {
+
+        int ci = (int) c.centroid.x + adjustImage.width * (int) c.centroid.y;
+        int cc = adjustImage.pixels[ci];
+        if (cc == pa.color(255)) {
+            c.reverse = 0;
+            //c.pixelList = whitePixels;
+        } else if (cc == pa.color(0)) {
+            c.reverse = 1;
+            //c.pixelList = blackPixels;
+        } else {
+            c.pixelList = new ArrayList<>();
+            c.pixelList.add(new Point(0, 0));
+        }
+
+        c.calculateProperties(densityMatrix);
     }
 
     public void fixStippleColors(PImage background) {

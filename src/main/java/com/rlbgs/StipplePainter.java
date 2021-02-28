@@ -225,8 +225,8 @@ class StipplePainter {
         update();
     }
 
-    public void saveSVG() {
-        List<Polygon> contours = Imp.getPolygons();
+    public void saveSVG(double filterFactor) {
+        List<Polygon> contours = Imp.getPolygons(filterFactor);
         PGraphics svg = pa.createGraphics(w, h, SVG, "/Users/kerem/Desktop/output2.svg");
         svg.beginDraw();
 
